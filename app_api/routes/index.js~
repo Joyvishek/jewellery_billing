@@ -1,0 +1,369 @@
+var express = require('express');
+var router = express.Router();
+var jwt = require('express-jwt');
+var auth = jwt({
+  secret: 'MY_SECRET',
+  userProperty: 'payload'
+});
+
+var multipart = require('connect-multiparty');
+var multipartMiddleware = multipart();
+
+var ctrlProfile = require('../controllers/profile');
+var ctrlAuth = require('../controllers/authentication');
+var ctrlCourses = require('../controllers/courses');
+var ctrlContact = require('../controllers/contact');
+var ctrlPublicProfile = require('../controllers/publicprofile');
+var ctrlSchools = require('../controllers/schools');
+var ctrlAdmin = require('../controllers/admin');
+var ctrlTeacher  = require('../controllers/teacher');
+var ctrlAnalytics  = require('../controllers/analytics/analyticstest');
+var ctrlContentCreation  = require('../controllers/contentcreation');
+var ctrlStudent  = require('../controllers/student');
+
+// profile
+router.post('/profile/public/connect*',auth, ctrlProfile.connectToUser);
+router.post('/profile/public/acceptconnect*',auth, ctrlProfile.acceptConnect);
+router.post('/profile/isfirstlogin', auth, ctrlProfile.isFirstLogin); 				// is first login
+router.post('/profile/user/getunreadnotification', auth, ctrlProfile.getUnreadNotification); 	// get unread notificaiton
+router.post('/profile/user/sendenrolmentrequest', auth, ctrlProfile.sendEnrolmentRequest); 	// send enrolment request to school admin
+router.get('/profile/public*', ctrlPublicProfile.publicProfileRead);
+router.get('/profile*', auth, ctrlProfile.profileRead);
+router.post('/profile*',auth, ctrlProfile.profileEdit);
+router.get('/forum/profile*', auth, ctrlProfile.forumProfileRead);
+
+router.get('/get/connectionrequests*',auth, ctrlProfile.getConnectionRequests);
+router.get('/get/connections*',auth, ctrlProfile.getConnections);
+
+router.post('/upload/profilepic', [auth,multipartMiddleware],ctrlProfile.uploadImage);
+router.post('/upload/assetimage', [auth,multipartMiddleware],ctrlContentCreation.uploadAssetImage);
+router.get('/assets/getassets', auth, ctrlContentCreation.getAssets);
+
+//router.get('/login_external', ctrlAuth.login_external);
+
+router.get('/wishlist/toggle*', auth, ctrlProfile.toggleWishlist);
+
+router.get('/wishlist/check*', auth, ctrlProfile.isWishlisted);
+
+// google login
+router.get('/login_external/auth/google', ctrlAuth.login_external_google);
+
+router.get('/auth/google*', ctrlAuth.login_external_callback_google);
+
+// facebook login
+router.get('/login_external/auth/facebook', ctrlAuth.login_external_facebook);
+router.get('/auth/facebook*', ctrlAuth.login_external_callback_facebook);
+
+// twitter login
+router.get('/login_external/auth/twitter', ctrlAuth.login_external_twitter);
+router.get('/auth/twitter*', ctrlAuth.login_external_callback_twitter);
+
+// linkedin login
+router.get('/login_external/auth/linkedin', ctrlAuth.login_external_linkedin);
+router.get('/auth/linkedin*', ctrlAuth.login_external_callback_linkedin);
+
+// Check unique username
+router.post('/username/save', auth, ctrlProfile.saveUsername);
+router.get('/username*', auth, ctrlProfile.isUsernameUnique);
+
+// Check unique email
+router.post('/email/save', ctrlProfile.saveEmail);
+router.get('/email/isverified*', auth, ctrlProfile.isEmailVerified);
+router.get('/email/resend', auth, ctrlProfile.resendEmail);
+router.get('/email*', ctrlProfile.isEmailUnique);
+
+// Check save user type
+router.post('/userdetails/save', auth, ctrlProfile.saveUserDetails);
+
+// course
+//router.get('/courses/videos*', ctrlCourses.getCourseVideos);
+router.get('/courses*', ctrlCourses.getCourses);
+router.get('/tags*', ctrlCourses.getTags);
+
+
+// authentication
+router.post('/register', ctrlAuth.register);
+router.post('/login', ctrlAuth.login);
+router.post('/verifyemail', ctrlAuth.verifyEmail);
+
+/********* Admin ***************/
+// register admin
+router.post('/registeradmin', auth, ctrlAuth.saveAdminEmail);
+
+// admin verify and login
+router.post('/admin/verifyemail', ctrlAuth.adminVerifyEmail);
+
+// admin approves joining requests of teachers/studetns
+router.post('/admin/approvebyadmin', auth, ctrlAdmin.approveByAdmin);
+
+/*********** End of Admin *******************/
+
+// contact message
+router.post('/sendcontact/message*', ctrlContact.sendMessage);
+
+// schools
+router.get('/schools/names*', ctrlSchools.getSchools);
+// get section details against sectionId
+router.get('/schools/getsection*', ctrlSchools.getSection);
+// get class details against sectionId
+router.get('/schools/getclassagainstsection*', auth, ctrlSchools.getClassAgainstSection);
+// get current session for a school
+router.get('/schools/getcurrentsession', ctrlSchools.getSchoolCurrentSession);
+// get subjects of a section
+router.get('/schools/getsubjectsofasection', auth, ctrlSchools.getSchoolSubjectsofaSection);
+
+/////////////////////////////////////// Class ////////////////////////////////////////
+
+// Get Section Routine
+router.get('/schools/section/getRoutine*', auth, ctrlSchools.getRoutine);
+
+// Get Class Syllabus for subjects
+router.get('/schools/section/getsyllabus*', auth, ctrlSchools.getSyllabus);
+
+// Get Teacher of a school
+router.get('/schools/section/getteachers*', auth, ctrlSchools.getSchoolTeachers);
+
+// Get Sections of a school
+router.get('/schools/getschoolsections', auth, ctrlSchools.getSchoolSections);
+
+// Choose subject of class
+router.post('/schools/classsessionaddsubject', auth, ctrlTeacher.classSessionAddSubject);
+
+// Get current sesison going on in a section
+router.get('/schools/getongoingsession', auth, ctrlSchools.getOngoingSession);
+
+// Get today's attendance
+router.get('/schools/getontodaysattendance', auth, ctrlSchools.getTodaysAttendance);
+
+// Get ClassTeacher ClassMonitor
+router.get('/schools/section/getclassteachermonitor', auth, ctrlSchools.getClassTeacherMonitor);
+
+// Get all classesses and sections against a schoolId
+router.get('/schools/getallclasssection', auth, ctrlSchools.getAllClassSection);
+
+// Get Todays attendance data of students
+router.get('/schools/getstudentsattendance', auth, ctrlSchools.getStudentAttendance);
+
+// Get last session in a section by a teacher of a subject
+router.get('/schools/getlastsessionbyteacherofsubject', auth, ctrlSchools.getLastSessionOfTeacherOfSubject);
+
+// Get attendance percentage on a day in a section
+router.get('/schools/getattendanceonaday', auth, ctrlSchools.getAttendanceOnADay);
+
+////////////////////////// Analytics ////////////////////////////////////////
+// Get Time alloted
+router.get('/schools/section/getTimeAllotted*', auth, ctrlSchools.getTimeAllotted);
+
+// Get Time alloted
+router.get('/analytics/getpageviews*', ctrlAnalytics.getPageViews);
+
+// Get Total Class Time
+router.get('/teacher/gettotalclasstime*', auth, ctrlTeacher.getTotalClassTime);
+
+// Topic-wise pageviews
+router.get('/analytics/teachers/content/topicwisepagevies*', ctrlAnalytics.getTopicWisePageViews);
+
+// Topic-wise pageviews for all modules
+router.get('/analytics/teachers/content/topicwisepageviewsallmodules*', ctrlAnalytics.getAllModulePageViews);
+
+// Topic-wise assessment cumulative percentage score
+router.get('/teacher/content/gettopicwiseassessmentscore*', auth, ctrlTeacher.getTopicWiseAssessmentScore);
+
+// Daily Pageviews of a particular teacher's content
+router.get('/analytics/teachers/content/dailypageviews*', ctrlAnalytics.getDailyPageViewsOfTeacher);
+
+// How many teachers taking classes
+router.get('/analytics/admin/teacherstakingclass*', auth, ctrlAnalytics.getTeachersTakingClass);
+
+// Teacher-wise number of topics content created for
+router.get('/analytics/admin/teacherwisenumberoftopiccreated*', auth, ctrlAnalytics.getTeacherWiseNumberOfTopicCreated);
+
+// Teacher-wise Monthly number of Classroom sessions
+router.get('/analytics/admin/teacherwisemonthlyclassroomsession*', auth, ctrlAnalytics.getTeacherWiseMonthlyClassroomSession);
+
+// Get Top 3 topics viewed for a teacher
+router.get('/analytics/teachers/content/topthreetopicsviewd*',  ctrlAnalytics.getTopThreeTopicsViewed);
+
+// Overall time spent across all topics of a content
+router.get('/analytics/teachers/content/overalltimespentacrossalltopics*',  ctrlAnalytics.getOverallTimeSpentAcrossAllTopics);
+
+// Average Time taking attendance for a teacher
+router.get('/analytics/teachers/attendance/averagetimetakingattendance*',  ctrlAnalytics.getAverageTimeTakingAttendance);
+
+// Topic-wise notes taken against a content ID
+router.get('/analytics/teachers/topicwisenotesttaken*', auth, ctrlAnalytics.getTopicWiseNotesTaken);
+
+// Topic-wise assignment scores for all modules of a subject and class for a student
+router.get('/analytics/teachers/content/topicwisescoresallmodulessubject*', ctrlAnalytics.getAllModuleScoresForSubject);
+
+// Topic-wise number of students having scores < 30%, >=30-50%, >=50-80%, >= 80% of all modules
+// of a particular subject in a class 
+router.get('/analytics/teachers/content/topicwisescorebracketofaclass', ctrlAnalytics.getClassSubjectScoreBracket);
+
+// Overall attendance percentage over a date range
+router.get('/analytics/students/attendance/overallpercentage*', ctrlAnalytics.getoverallAttendanceOfStudent);
+
+// Day of Week based attendance of a Student between a date range
+router.get('/analytics/students/attendance/dayofweekbased*', ctrlAnalytics.getDayOfWeekBasedStudentAttendance);
+
+// Overall average / maximum attendance of a section over a date range
+router.get('/analytics/students/attendance/averagepercentageofSection*', ctrlAnalytics.getAverageAttendanceOfSection);
+
+// Get current server date time
+router.get('/analytics/currentserverdatetime*', ctrlAnalytics.getCurrentServerTime);
+
+// Topic-wise number of students having scores 0-10%, 10-20%... of all modules
+// of a particular subject in a class 
+router.get('/analytics/teachers/content/topicwisescorebracketofaclassgranular*', ctrlAnalytics.getClassSubjectScoreBracketGranular);
+
+// Topics visited in class by a teacherId on a given date
+router.get('/analytics/teachers/content/topicsvisitedinclass*', ctrlAnalytics.getTopicsVisitedInClassTeacher);
+
+// Time of day based time spent on different subjects of a student
+router.get('/analytics/teachers/content/timeofdaybasedtimespentofsubjectinofstudent*', ctrlAnalytics.getTimeOfDayBasedTimeSpentOnSubjectOfStudent);
+
+// Student-wise score vs pageviews of an array of studentIds of a startDate and endDate
+router.post('/analytics/teachers/studentwisescorevspageviews*', ctrlAnalytics.getStudentWiseScoreVsPageviews);
+
+// Student-wise score vs attendance of an array of studentIds of a startDate and endDate
+router.post('/analytics/teachers/studentwisescorevsattendance', ctrlAnalytics.getStudentWiseScoreVsAttendance);
+
+// Time of day based time spent on creating content by different teachers
+router.get('/analytics/teachers/content/timeofdaybasedtimespentoncreatingcontent*', ctrlAnalytics.getTimeOfDayBasedTimeSpentOnCreatingContent);
+
+// Weekly attendance of overall class
+router.get('/analytics/students/attendance/weekly*', ctrlAnalytics.getWeeklyStudentAttendance);
+
+// Daily Pageviews of all teachers in a school
+router.get('/analytics/teachers/content/allteachersdailypageviews*', ctrlAnalytics.getDailyPageViewsOfAllTeachers);
+
+// Returns topic-wise syllabus progress for a student
+router.get('/analytics/students/topicwisesyllabusprogress', ctrlAnalytics.getAllModuleSyllabusProgressStudent);
+
+/////////////////////////////////////////////////////////////////////////////
+
+// Teacher Take attendance
+router.post('/teacher/takestudentattendance', auth, ctrlTeacher.takeAttendance);
+// Get Teacher Routine
+router.get('/teacher/getRoutine*', auth, ctrlTeacher.getRoutine);
+// Teacher Start Class
+router.post('/teacher/startclass', auth, ctrlTeacher.startClass);
+// Teacher End Class
+router.post('/teacher/endclass', auth, ctrlTeacher.endClass);
+// Returns teacher subjects
+router.get('/teacher/getteachersubjects', auth, ctrlTeacher.getTeacherSubjects);
+// Returns teacher classes where she created content
+router.get('/teacher/getteachercontentclasses', auth, ctrlTeacher.getTeacherContentClasses);
+// Returns teachers' content
+router.get('/teacher/getteachercontent', auth, ctrlTeacher.getTeacherContent);
+// Returns teachers' FULL content
+router.get('/teacher/getteacherfullcontent', auth, ctrlTeacher.getTeacherFullContent);
+// Returns teachers' FULL content
+router.get('/teacher/getteachertopicname', auth, ctrlTeacher.getTeacherTopicName);
+// Teacher Create New Assessment Group
+router.post('/teacher/assignment/createnewassessmentgroup', auth, ctrlTeacher.CreateNewAssessmentGroup);
+// Teacher Create New Assignment
+router.post('/teacher/assignment/createnewassignment', auth, ctrlTeacher.CreateNewAssignment);
+// Teacher Edit Assignment
+router.post('/teacher/assignment/editassignment', auth, ctrlTeacher.EditAssignment);
+// Get Teacher Names against multiple userIds
+router.get('/teacher/getusernames*', auth, ctrlTeacher.getUserNames);
+// Teacher assign assessmentDoc / assessmentGroup to Class
+router.post('/teacher/assignment/assigntoclass', auth, ctrlTeacher.assignToClass);
+// Teacher Edit assign assessmentDoc / assessmentGroup to Class
+router.post('/teacher/assignment/editassigntoclass', auth, ctrlTeacher.editAssignToClass);
+// Get AssessmentGroups against TeacherId and SubjectId
+router.get('/teacher/getteacherassessmentgroups*', auth, ctrlTeacher.getTeacherAssessmentGroups);
+// Get assessments given by a teacher to a section
+router.get('/teacher/assignment/getgivenassessmentclass*', auth, ctrlTeacher.getGivenAssessmentClass);
+// Get all completed submissions of a assessmentclass
+router.get('/teacher/assignment/getassessmentclasssubmissions*', auth, ctrlTeacher.getAssessmentClassSubmissions);
+// Teacher evaluate submission subjective
+router.post('/teacher/assignment/evaluatesubmissionsubjective', auth, ctrlTeacher.evaluateSubmissionSubjective);
+// Teacher evaluate submission MCQ
+router.post('/teacher/assignment/evaluatesubmissionmcq', auth, ctrlTeacher.evaluateSubmissionMCQ);
+// Get AssessmentGroups against TeacherId and SubjectId
+router.get('/teacher/getassessmentgroupsagainsttopic', auth, ctrlTeacher.getTeacherAssessmentGroupsAgainstTopic);
+// Teacher Delete an Assignment from an AssessmentGroup
+router.post('/teacher/assignment/deleteassignmentfromgroup', auth, ctrlTeacher.DeleteAssignmentFromGroup);
+// Returns subjects on which a teacher takes class according to routine
+router.get('/teacher/getteachersubjectsroutine', auth, ctrlTeacher.getTeacherRoutineSubjects);
+// Returns classes for which a teacher takes class according to routine on a subect
+router.get('/teacher/getteacherclassesroutine', auth, ctrlTeacher.getTeacherRoutineClass);
+// Returns subjects on which a student at a class according to routine
+router.get('/student/getstudentsubjectsroutine', auth, ctrlStudent.getStudentRoutineSubjects);
+// Get all student details
+router.get('/student/getstudentdetails', auth, ctrlStudent.getStudentDetails);
+// Teacher Delete an Assignment from an AssessmentGroup
+router.post('/teacher/assignment/deleteassignmentfromgroup', auth, ctrlTeacher.DeleteAssignmentFromGroup);
+// Teacher Edit Assessment Group
+router.post('/teacher/assignment/editassessmentgroup', auth, ctrlTeacher.EditAssessmentGroup);
+// Get all completed submissions 
+// for a assessmentclass whose evaluation is pending
+router.get('/teacher/assignment/getsubmissionsnotevaluated', auth, ctrlTeacher.getSubmissionsNotEvaluated);
+// Get all completed submissions 
+// for a assessmentclass whose evaluation is done
+router.get('/teacher/assignment/getsubmissionsalreadyevaluated', auth, ctrlTeacher.getSubmissionsAlreadyEvaluated);
+// Get score against an assessmentSubmissionId
+router.get('/teacher/assignment/getassessmentscoreagainstsubmissionid', auth, ctrlTeacher.getAssessmentScoreAgainstSubmissionId);
+///////////////////////////////////// Content Creation//////////////////////////////////////////////////////
+// Topic-wise assessment cumulative percentage score
+router.get('/contentcreation/getcrawl*', ctrlContentCreation.getCrawl);
+
+// Teacher save incremental content
+router.post('/contentcreation/savecontentdelta*', auth, ctrlContentCreation.saveContentDelta);
+
+// Save highlighted texts by students
+router.post('/contentcreation/savestudenthighlightdelta*', auth, ctrlContentCreation.saveStudentHighlightDelta);
+
+// Save notes by students
+router.post('/contentcreation/savestudentnotes*', auth, ctrlContentCreation.saveStudentNotes);
+
+// Add Topic
+router.post('/contentcreation/addtopic*', auth, ctrlContentCreation.addTopic);
+
+// Edit Topic
+router.post('/contentcreation/edittopic*', auth, ctrlContentCreation.editTopic);
+
+// Create new course content
+router.post('/contentcreation/createnewcontent*', auth, ctrlContentCreation.createNewContent);
+
+// Create content module-topic
+router.post('/contentcreation/createcontenttopic*', auth, ctrlContentCreation.createContentTopic);
+
+// Save / Edit full content against a topic
+router.post('/contentcreation/savefullcontent*', auth, ctrlContentCreation.saveFullContent);
+
+// Edit course content
+router.post('/contentcreation/editcoursecontent', auth, ctrlContentCreation.EditCourseContent);
+
+/////////////////////////////////  Students  ////////////////////////////////////////////////////////////// 
+
+// Get topic document against a topicId
+router.post('/student/viewcontent', auth, ctrlStudent.viewContent);
+// Get Given Class Assessments
+router.get('/student/assignment/getgivenassessmentclass*', auth, ctrlStudent.getGivenAssessmentClass);
+// Post assessmentClass submission
+router.post('/student/assignment/submitassessmentclass', auth, ctrlStudent.submitAssessmentClass);
+// Post Edit assessmentClass submission
+router.post('/student/assignment/editassessmentclasssubmission', auth, ctrlStudent.editAssessmentClassSubmission);
+// Get pending assessments whose submission is pending
+router.get('/student/assignment/getpendingassessmentclass*', auth, ctrlStudent.getPendingAssessmentClass);
+// Student Enter Class after teacher has started the classroom session
+router.post('/student/enterclass', auth, ctrlStudent.enterClass);
+// Get if a student has entered the class against a classroom_sessionId
+router.get('/student/ifenteredclass', ctrlStudent.getIfStudentEnteredClass);
+// get Assesment Details
+router.get('/student/enterclass/assesmentsubmit/getassesmentdetails*', auth, ctrlStudent.getAssesmentDetails);
+// Get full topic document against a topicId
+router.post('/student/viewcontentfull*', auth, ctrlStudent.viewContentFull);
+// Returns teachers who takes class of a particular student of a particular subject
+router.get('/student/getstudentclassteachers', auth, ctrlStudent.getStudentRoutineTeachers);
+
+// Get coursecontentId against topicId
+router.get('/student/coursecontent/getcontentidagainsttopic', auth, ctrlStudent.getContentIdAgainstTopic);
+
+//get Assesment Details Submission
+router.get('/teacher/assignment/getassesmentdetailssubmission', auth, ctrlTeacher.getAssesmentDetailsSubmission);
+
+module.exports = router;

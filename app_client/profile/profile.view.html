@@ -1,0 +1,401 @@
+<navigation></navigation>
+
+
+<div class="container">
+    <div class="divider">
+    <div class=" wow fadeInLeft" data-wow-duration="500ms" data-wow-delay="300ms">
+                                <div class="team-single-wrapper"><center>
+                                            <img src="{{ vm.jsondata.profilepic }}" class="img-responsive" alt="">
+<div class="social">
+   <ul>
+        <li  id="myBtn" style="position:relative;margin-top:-18px;margin-right:-18px;z-index:99999999;display: inline-block"><a href="" ng-click="removeExperience($index)"><i class="fa fa-lg fa-upload remove" style=" background:  #73bfed"></i></a></li>
+        <li ng-show="email_notverified" id="notverified_btn" style="position:relative;margin-top:-18px;margin-right:-18px;z-index:99999999;display: inline-block; margin-left:18px;" ><a href="#" title="Please Verify Email"><i class="fa" style=" background:   #e74c3c;height:15px;width:15px;" ></i></a></li>
+   </ul>
+</div>
+</center>
+                                    <div class="person-info"><center>
+      <form  class="form-horizontal" name="profile_name_form" ng-submit="profileNameUpdate()">
+        <div class="input-group col-md-6">
+          <input type="text" name="user.name" ng-model="vm.jsondata.name" class="form-control" placeholder="Your Name" style="font-size:18px;">
+	  <span ng-show="nameUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span>
+          <span class="input-group-btn">
+	    <input type="submit" class="btn btn-info form-control" value="Save Data">
+	  </span>
+        </div>
+
+      </form>
+<span class="lead input-group-addon" style="font-size:18px;" >Your Sharable Link &nbsp;&nbsp;&nbsp;<a target="_blank" href="http://theorexedutech.com/x/{{ vm.jsondata.username }}">http://theorexedutech.com/x/{{ vm.jsondata.username }}</a></span>
+      <form  class="form-horizontal" name="profile_headline_form" ng-submit="profileHeadlineUpdate()">
+        <div class="input-group col-md-6">
+          <input type="text" name="headline" ng-model="vm.jsondata.headline" class="form-control" placeholder="Your Professional Headline"  style="font-size:18px;">
+	  <span ng-show="headlineUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span>
+          <span class="input-group-btn">
+	    <input type="submit" class="btn btn-info form-control" value="Save Data">
+	  </span>
+        </div>
+      </form>
+                                    </div></center>
+                                  
+                                    <div class="social-icons text-center" style="padding: 50px;">
+                                            <ul class="nav nav-pills text-center " >
+                                                <li><a href="#" id="showform"><i class="fa fa-facebook"></i></a></li>
+                                                <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                                                <li><a href="#"><i class="fa fa-google-plus"></i></a></li>
+                                                <li><a href="#"><i class="fa fa-linkedin"></i></a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                            </div>
+        </div>
+    </div>
+<div class="container">
+  <div class="row">
+    <div class="col-md-8 col-sm-1 wow fadeInLeft" data-wow-duration="500ms" data-wow-delay="300ms">
+      <div class="tabs-left">
+        <ul class="nav nav-tabs">
+          <li class="active"><a href="#bio" data-toggle="tab"><span class="glyphicon glyphicon-user">&nbsp;Bio </span></a></li>
+          <li><a href="#exp" data-toggle="tab"><span class="glyphicon glyphicon-pencil">&nbsp;Experience</span></a></li>
+          <li><a href="#edu" data-toggle="tab"><span class="glyphicon glyphicon-education">&nbsp;Education</span></a></li>
+          <li><a href="#skills" data-toggle="tab"><span class="glyphicon glyphicon-star">&nbsp;Skills</span></a></li>
+          <li><a href="#info" data-toggle="tab"><span class="glyphicon glyphicon-info-sign">&nbsp;Additional Info</span></a></li>
+          <li><a href="#projects" data-toggle="tab"><span class="glyphicon glyphicon-briefcase">&nbsp;Projects</span></a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="bio">
+            <h3>Bio</h3>
+      <form  class="form-horizontal" name="experience_form" ng-submit="profileBioUpdate()">
+		<div class="input-group">
+		    <textarea class="form-control custom-control" rows="3" style="resize:none" ng-model="vm.jsondata.bio" ng-list="&#10;" ng-trim="false">></textarea>    
+	            <span ng-show="bioUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span> 
+		    <span class="">
+		      <input type="submit" class="btn btn-info form-control" value="Save Data">
+		    </span>
+		</div>
+	</form>
+
+          </div>
+          <div class="tab-pane" id="exp">
+            <h3>Experience</h3>
+
+      <form  class="form-horizontal" name="experience_form" ng-submit="profileExperienceUpdate()">
+        <div class="form-group" id="cd-box" style="width:98%;" ng-repeat="value in vm.jsondata.experience">
+<div class="social" >
+   <ul>
+        <li  style="position:relative;float:right;margin-top:-18px;margin-right:-18px;z-index:99999999;display: inline-block"><a href="" ng-click="removeExperience($index)"><i class="fa fa-lg fa-times remove" ></i></a></li>
+   </ul>
+</div>
+	 <input type="hidden" name="id" ng-model="value.id" ng-init="value.id = $index" class="form-control-static" >
+         <div class="input-group" style="width:100%">
+            <input type="text" name="company.name" ng-model="value.company" class="form-control" placeholder="Company">
+	 </div>
+         <div class="input-group" style="width:100%">
+          <input type="text" name="company.title" ng-model="value.title" class="form-control" placeholder="Title" >
+	 </div>
+         <div class="input-group" style="width:100%">
+            <input type="number" name="company.start_year" ng-model="value.start_year" class="form-control" placeholder="Start Year">
+	 </div>
+        </div>
+	            <span ng-show="expUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span> 
+		    <span class="">
+			<input type="button" class="addfields btn btn-info form-control" ng-click="addNewExperience()" value="Add Experience">
+		    </span>
+
+		    <span class="">
+		      <input type="submit" class="btn btn-info form-control" value="Save Data">
+		    </span>
+
+      </form>
+          
+          </div>
+          <div class="tab-pane" id="edu">
+            <h3>Education</h3>
+      <form  class="form-horizontal" name="education_form" ng-submit="profileEducationUpdate()">
+        <div class="form-group" id="cd-box" style="width:98%;" ng-repeat="value in vm.jsondata.education">
+<div class="social" >
+   <ul>
+        <li  style="position:relative;float:right;margin-top:-18px;margin-right:-18px;z-index:99999999;display: inline-block"><a href="" ng-click="removeEducation($index)"><i class="fa fa-lg fa-times remove" ></i></a></li>
+   </ul>
+</div>
+	 <input type="hidden" name="id" ng-model="value.id" ng-init="value.id = $index" class="form-control-static" >
+         <div class="input-group" style="width:100%">
+            <input type="text" name="education.school" ng-model="value.school" class="form-control" placeholder="School">
+	 </div>
+         <div class="input-group" style="width:100%">
+          <input type="text" name="education.degree" ng-model="value.degree" class="form-control" placeholder="Degree">
+	 </div>
+         <div class="input-group" style="width:100%">
+            <input type="number" name="education.from" ng-model="value.from" class="form-control" placeholder="Start Year">
+	 </div>
+         <div class="input-group" style="width:100%">
+            <input type="number" name="education.to" ng-model="value.to" class="form-control" placeholder="End Year">
+	 </div>
+         <div class="input-group" style="width:100%">
+            <input type="number" name="education.grade" ng-model="value.grade" class="form-control" placeholder="% Grade">
+	 </div>
+        </div>
+	            <span ng-show="eduUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span> 
+		    <span class="">
+			<input type="button" class="addfields btn btn-info form-control" ng-click="addNewEducation()" value="Add Education">
+		    </span>
+
+		    <span class="">
+		      <input type="submit" class="btn btn-info form-control" value="Save Data">
+		    </span>
+
+      </form>
+	  </div>
+          <div class="tab-pane" id="skills">
+            <h3>Skills</h3>  
+
+      <form  class="form-horizontal" name="skill_form" ng-submit="profileSkillUpdate()">
+        <div class="form-group" id="cd-box" style="width:98%;" ng-repeat="value in vm.jsondata.skill">
+
+	 <input type="hidden" name="id" ng-model="value.id" ng-init="value.id = $index" class="form-control-static" >
+	
+         <div class="input-group col-md-10" style="float:left;">
+            <input type="text" name="skill" ng-model="value" class="form-control" placeholder="Skill">
+
+	 </div>
+		<div class="social " >
+		   <ul>
+			<li  style="float:right;margin-right:5px;margin-top:0px;position:relative;z-index:99999999;display: inline-block"><a href="" ng-click="removeSkill($index)"><i class="fa fa-lg fa-times remove" ></i></a></li>
+		   </ul>
+		</div>
+        </div>
+	            <span ng-show="skillUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span> 
+		    <span class="">
+			<input type="button" class="addfields btn btn-info form-control" ng-click="addNewSkill()" value="Add Skill">
+		    </span>
+
+		    <span class="">
+		      <input type="submit" class="btn btn-info form-control" value="Save Data">
+		    </span>
+
+      </form>
+	  </div>
+          <div class="tab-pane" id="info"> 
+            <h3>Additional Info</h3>  
+      <form  class="form-horizontal" name="additional_info_form" ng-submit="profileAddlInfoUpdate()">
+		<div class="input-group">
+		    <textarea class="form-control custom-control" rows="3" style="resize:none" ng-model="vm.jsondata.additional_info" ng-list="&#10;" ng-trim="false">></textarea>  
+	            <span ng-show="addlinfoUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span>    
+		    <span class="">
+		      <input type="submit" class="btn btn-info form-control" value="Save Data">
+		    </span>
+		</div>
+	</form>
+
+	  </div>
+          <div class="tab-pane" id="projects">
+            <h3>Projects</h3>  
+      <form  class="form-horizontal" name="project_form" ng-submit="profileProjectUpdate()">
+        <div class="form-group" id="cd-box" style="width:98%;" ng-repeat="value in vm.jsondata.projects">
+<div class="social" >
+   <ul>
+        <li  style="position:relative;float:right;margin-top:-18px;margin-right:-18px;z-index:99999999;display: inline-block"><a href="" ng-click="removeProject($index)"><i class="fa fa-lg fa-times remove" ></i></a></li>
+   </ul>
+</div>
+	 <input type="hidden" name="id" ng-model="value.id" ng-init="value.id = $index" class="form-control-static" >
+         <div class="input-group" style="width:100%">
+            <input type="text" name="project.title" ng-model="value.title" class="form-control" placeholder="Project Title">
+	 </div>
+         <div class="input-group" style="width:100%">
+            <input type="number" name="company.completion_year" ng-model="value.completion_year" class="form-control" placeholder="Year Of Completion">
+	 </div>
+		<div class="input-group" style="width:100%;">
+		    <textarea class="form-control custom-control" rows="3" style="resize:none; " ng-model="value.description" ng-list="&#10;" ng-trim="false" placeholder="Project Description"></textarea>     
+		</div>
+
+        </div>
+	            <span ng-show="projUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span> 
+		    <span class="">
+			<input type="button" class="addfields btn btn-info form-control" ng-click="addNewProject()" value="Add Project">
+		    </span>
+
+		    <span class="">
+		      <input type="submit" class="btn btn-info form-control" value="Save Data">
+		    </span>
+
+      </form>
+          
+
+
+	  </div>
+
+
+        </div><!-- /tab-content -->
+      </div><!-- /tabbable -->
+    </div><!-- /col -->
+      <div class="col-md-4 col-sm-1 wow fadeInRight" data-wow-duration="500ms" data-wow-delay="300ms">
+          <!--Forum-->
+          <div>
+              <h2>Forum</h2>
+          </div><!--/Forum-->
+          <br>
+          <!--Add sugg.-->
+              <h2>Connection Requests</h2>
+          <div>
+
+  <!--<a href="#" data-toggle="popover" popover-trigger="mouseenter" title="Popover Header"  data-content='<button class="btn btn-info" ng-click="accept_connect()">Accept</button>Some content inside the popover'>-->
+<div class="row" ng-repeat="letter in vm.connection_requests track by $index" ng-if="$index % 4 == 0" >
+
+  <div style="cursor:pointer;" class="col-xs-3 wow fadeInRight ng-scope ng-binding" data-wow-duration="500ms" data-wow-delay="300ms"
+       ng-repeat="i in [$index, $index + 1, $index + 2, $index + 3]" 
+       ng-if="vm.connection_requests[i] != null"  ng-init="vm.onEnd()" data-toggle="popover" data-trigger="hover" data-content='<div class="row text-center" style="background:  #556663  ;padding: 2px 16px;color:#fff; font-size:16px;font-weight:bold;"><a href="http://theorexedutech.com/x/{{ vm.connection_requests[i].username }}" target="_blank" style="color:#fff;">{{ vm.connection_requests[i].name }}<a/></div><div class="row text-center" style="background:   #d3e3e0   ;padding: 2px 16px;color:  #324844  ; font-size:16px;font-weight:bold;">{{ vm.connection_requests[i].headline }}</div><div class="row"></div>'>
+
+      <div class="col-sm-2 wow fadeInRight" data-wow-duration="500ms" data-wow-delay="300ms">
+          <img class="suggestimg" src="{{ vm.connection_requests[i].profilepic }}">
+	<div class="social" id="myBtn">
+	   <ul>
+		<li  style="position:relative;margin-top:-18px;margin-right:-18px;z-index:99999999;display: inline-block"><a href="" ng-click="accept_connect(vm.connection_requests[i]._id)"><i class="fa fa-lg fa-check remove" style=" background:  #73bfed"></i></a></li>
+	   </ul>
+	</div>
+      </div>
+
+  </div>
+
+</div>
+ <!--</a>-->
+
+          </div><!--/Add sugg.-->
+
+          <!--Connections.-->
+              <h2>Your Connections</h2>
+          <div>
+
+  <!--<a href="#" data-toggle="popover" popover-trigger="mouseenter" title="Popover Header"  data-content='<button class="btn btn-info" ng-click="accept_connect()">Accept</button>Some content inside the popover'>-->
+<div class="row" ng-repeat="letter in vm.connections track by $index" ng-if="$index % 4 == 0" >
+
+  <div style="cursor:pointer;" class="col-xs-3 wow fadeInRight" data-wow-duration="500ms" data-wow-delay="300ms"
+       ng-repeat="i in [$index, $index + 1, $index + 2, $index + 3]" 
+       ng-if="vm.connections[i] != null"  ng-init="vm.onEnd()" data-toggle="popover" data-trigger="hover" data-content='<div class="row text-center" style="background:  #556663  ;padding: 2px 16px;color:#fff; font-size:16px;font-weight:bold;"><a href="http://theorexedutech.com/x/{{ vm.connection_requests[i].username }}" target="_blank" style="color:#fff;">{{ vm.connections[i].name }}<a/></div><div class="row text-center" style="background:   #d3e3e0   ;padding: 2px 16px;color:  #324844  ; font-size:16px;font-weight:bold;">{{ vm.connections[i].headline }}</div><div class="row"></div>'>
+
+      <div class="col-sm-2 wow fadeInRight" data-wow-duration="500ms" data-wow-delay="300ms">
+          <img class="suggestimg" src="{{ vm.connections[i].profilepic }}">
+      </div>
+
+  </div>
+
+</div>
+ <!--</a>-->
+
+          </div><!--/Connections.-->
+
+    </div><!-- /col -->
+  </div><!-- /row -->
+</div><!-- /container -->        
+                           
+			
+<!--/Dashboard-->
+
+
+<div class="container">
+  <div class="row">
+    
+     <div class="col-md-6">
+<!--
+      <h1 class="form-signin-heading">Your profile</h1>
+  <a href="{{jsondata.publicProfileUrl}}">{{jsondata.firstName}} {{jsondata.lastName}}</a>
+	<div ng-show="isVerified">Email Is Verified</div>
+  <form ng-submit="getCommitData()">
+    <input type="submit" value="Get Data">
+  </form>
+<script type="in/Login"></script>-->
+
+<!-- The Resend Mail Modal -->
+<div id="resendMailModal" class="modal">
+
+  <!-- Modal content -->
+  <div class="modal-content"  style="width:350px;">
+    <span class="close" id="resendmailclose">x</span>
+
+<form name="resendMailForm">
+
+<!-- Image Crop ---->
+  <div>      <button type="button" class="btn btn-info"  
+              ng-click="resendMail()">Resend Verification Mail</button></div>
+<div class="alert alert-success" ng-show="vm.jsondata.successmsg">
+  <strong>Mail Resent</strong>
+</div>
+
+
+</form>
+
+  </div>
+
+</div>
+
+
+<!-- The Modal -->
+<div id="myModal" class="modal" >
+
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close" id="imgclose">x</span>
+
+<form name="imgForm">
+
+<!-- Image Crop ---->
+  <div>      <button type="button" class="btn btn-info" ng-disabled="!imgForm.$valid" 
+              ng-click="uploadPic(myCroppedImage,fileInput.name)">Submit</button><input type="file" ngf-select id="fileInput" accept="image/*" ngf-max-size="2MB" required
+             ngf-model-invalid="errorFile" ng-model="fileInput"/></div>
+<div class="alert alert-success" ng-show="vm.jsondata.successmsg">
+  <strong>Uploaded</strong>
+</div>
+  <div class="cropArea">
+    <img-crop image="myImage" result-image="myCroppedImage"></img-crop>
+  </div>
+  <div style="display:none;"><img ng-src="{{myCroppedImage}}" /></div>
+
+  </div>
+
+</form>
+
+  </div>
+
+</div>
+
+
+<div id="form_wrapper" class="modal">
+  <div class="modal-content">
+    <span class="close">x</span><center>
+      <form  class="form-horizontal" name="socila_fb_form" ng-submit="profileSocialFbUpdate()">
+        <div class="input-group col-md-6">
+          <input type="text" name="fb" ng-model="vm.jsondata.facebook.public_profile" class="form-control" placeholder="Your Facebook Profile"  style="font-size:18px;">
+	  <span ng-show="socialfbUpdateSuccess" class="fa fa-check errsuccspan" style="color:green;"></span>
+          <span class="input-group-btn">
+	    <input type="submit" class="btn btn-info form-control" value="Save Data">
+	  </span>
+        </div>
+      </form></center>
+  </div>
+</div>  
+
+    </div>
+
+  </div>
+</div>
+
+
+    </div>
+
+  </div>
+</div>
+
+<footer></footer>
+
+<style>
+.thumb {
+    width: 24px;
+    height: 24px;
+    float: none;
+    position: relative;
+    top: 7px;
+}
+.cropArea {
+  background: #E4E4E4;
+  overflow: hidden;
+  width:500px;
+  height:350px;
+}
+</style>

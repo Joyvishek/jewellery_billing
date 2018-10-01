@@ -1,0 +1,108 @@
+<!--<a href="http://localhost:3000/dashboard" class="ajax-call"></a>
+<div id="loadingbar-frame"></div>-->
+<navigation></navigation>
+<!-- Theme included stylesheets for Quill -->
+<link href="https://cdn.quilljs.com/1.3.2/quill.snow.css" rel="stylesheet">
+<link href="https://cdn.quilljs.com/1.3.2/quill.bubble.css" rel="stylesheet">
+
+<section id="routine">
+  <div class="container">
+
+    <div class="row">
+    <!--Navigation tabs-->
+      <!--<div class="col-md-1 pull-right">
+        <ul>
+          <li><a class="fa fa-calendar active" href="#routine"></a></li>
+          <li><a class="fa fa-leanpub" href="#classes"></a></li>
+          <li><a class="fa fa-book" href="#subject"></a></li>
+          <li><a class="fa fa-pie-chart" href="#content"></a></li>
+          <li><a class="fa fa-university" href="#teacher"></a></li>
+          <li><a class="fa fa-pencil-square-o" href="#Notice"></a></li>
+        </ul>
+      </div>--><!--/nav-tabs-->
+    <!--Routine-->
+      <div class="col-md-2"> <!-- Topic name divs -->
+        <div>
+          <ul ng-repeat="content in syllabus[0].subjects">
+            <li>
+              <a href="" name="subject" >{{ content.text }}</a></li>
+              <ul ng-repeat="subjects in content.subjects">
+                <li><a href="" name="subsubject" ng-click="viewTopicContent( subjects.topicId, subjects.text )">{{ subjects.text }}</a></li>
+              </ul>
+          </ul>
+        </div>
+      </div><!--/col-md-2-->
+<div class="col-md-10"> <!-- Topic Content Div -->
+
+            <div>
+            <h1>{{ selectedTopicName }}</h1>
+            <p><br></p>
+          </div>
+
+<div id="editor-container">
+
+</div>
+
+<a href="#" data-toggle="popover" ng-init="onEnd()" title="Popover Header" data-content="Some content inside the popover">Toggle popover</a>
+
+</div>
+
+    </div><!--/row-->
+  </div><!--/container-->
+</section>
+<style>
+#editor-container {
+  height: 375px;
+  background: #fff;
+}
+#editor-heading {
+  height: 75px;
+  background: #fff;
+}
+#editor-container.ql-disabled .ql-tooltip {
+  visibility: inherit !important;
+}
+/********** Styling custom comment button  ***************************/
+.ql-comment  {
+  font-size: 25 px;
+  color : #dfdfdf ;
+}
+.ql-comment:after {
+  content: "🗉";
+}
+
+/********************************************************************/
+</style>
+<quill></quill>
+
+
+<!-- Modal for student taking notes -->
+
+<div id="noteModal" class="modal fade noteModal">
+  <form  class="form-horizontal" name="notes_modal_form" ng-submit="contentSaveNotes()">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Notes</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+
+	    <div class="modal-body">
+	        <textarea placeholder="Insert your notes here" ng-model="contentnotes" style="resize:none" name="contentnotes"></textarea>
+	    </div>
+	    <div class="modal-footer">
+	        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	        <input type="submit" class="btn btn-primary" value="save">
+	    </div>
+        </div>
+    </div>
+  </form>
+</div>
+
+
+<script ng-init='myVariable = true' ng-if='myVariable' type="text/javascript" src="/lib/js/wow.min.js"></script>
+<script type="text/javascript" src="/lib/js/main.js"></script>
+
+
+
+

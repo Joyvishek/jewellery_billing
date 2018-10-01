@@ -1,0 +1,129 @@
+/*popup css*/
+.overlay {
+  z-index: 1000;
+  position: fixed;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0);
+  transition: opacity 500ms;
+  visibility: hidden;
+  opacity: 0;
+}
+.overlay:target {
+  visibility: visible;
+  opacity: 5;
+}
+
+.popup {
+  margin: 70px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 5px;
+  width: 80%;
+  position: relative;
+  transition: all 5s ease-in-out;
+}
+
+.popup h2 {
+  margin-top: 0;
+  color: #000000;
+  font-weight: 5px;
+  font-family: Ubuntu, sans-serif;
+}
+.popup .close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  transition: all 200ms;
+  font-size: 30px;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
+}
+.popup .close:hover {
+  color: #06D85F;
+}
+.popup .content {
+  max-height: 30%;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 700px){
+  .box{
+    width: 70%;
+  }
+  .popup{
+    width: 70%;
+  }
+}
+
+/*form*/
+.login-box {
+  width: 320px;
+  height: 480px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  top: 50%;
+  left: 50%;
+  border-radius: 5px;
+  position: absolute;
+  transform: translate(-50%,-50%);
+  box-sizing: border-box;
+  padding: 80px 30px;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  position: absolute;
+  top: -15%;
+  left: calc(44% - 50px);
+  border: 17px solid rgb(255, 158, 76, 0.5);
+  border-radius: 100%;
+}
+
+
+.login-box input {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.login-box input[type="text"] {
+  margin-top: 60px;
+}
+
+.login-box input[type="text"], input[type="password"] {
+  border: none;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.8);
+  outline: none;
+  height: 35px;
+  padding-left: 15px;
+  font-size: 14px;
+  letter-spacing: 0.90px;
+}
+
+.login-box input[type="button"]{
+  border: none;
+  outline: none;
+  cursor: pointer;
+  height: 40px;
+  background: #FF9E4CFF;
+  color: #fff;
+  font-size: 16px;
+  border-radius: 20px;
+  margin-bottom: 30px;
+}
+
+.login-box input[type="button"]:hover {
+  background: #FF9035FF;
+  transition: 0.5s;
+}
+
+a {
+  font-size: 13px;
+  color: #fff;
+  text-decoration: none;
+}

@@ -1,0 +1,208 @@
+(function() {
+
+  angular
+    .module('meanApp')
+    .controller('studentdashboardstatsCtrl', studentdashboardstatsCtrl);
+  studentdashboardstatsCtrl.$inject = ['$location','$routeParams', 'meanData', '$scope', '$http', 'authentication', '$window'];
+    function studentdashboardstatsCtrl ($location, $routeParams, meanData, $scope, $http, authentication, $window) {
+      console.log('Bagless-student-dashboard-stats controller is running');
+	    var vm = this;
+
+	    vm.user = {};
+	    vm.classroomsessiondata={};
+	    vm.currentClass= "";
+	    vm.sectionStudentIds = [];
+	    vm.schoolCurrentSession = {};
+	    meanData.getUserProfile()
+	      .success(function(userdata) {
+	        vm.jsondata = userdata;
+		    meanData.getStudentRoutineSubjects($routeParams.studentid)
+		    .success(function(subjectdata){
+		    	vm.subjectdata = subjectdata;
+		    });
+	      	    meanData.getClassAgainstSection(vm.jsondata.currentsection._id)
+	           .success(function(classdata){
+			vm.currentClass = classdata._id;
+		    });
+	      	    meanData.getSchoolCurrentSession(vm.jsondata.currentschool._id)
+	           .success(function(currentsessiondata){
+			vm.schoolCurrentSession = currentsessiondata;
+		    });
+	    });
+
+// Week number to Date conversion
+	var getDateOfWeek = function(w, y) {
+	    var d = (1 + (w - 1) * 7); // 1st of January + 7 days for each week
+
+	    return Date.UTC(y, 0, d);
+	}
+
+// Initialize Highcharts sample for pageviews heatmap
+	    $scope.changeGraph = function(graphtitle, subjectId) {
+/****** Most Topic-wise assignment scores for all modules of a subject for a student  **************/
+if(graphtitle == "scoreheatmap"){
+      var studentId = [];
+      studentId.push($routeParams.studentid);
+      studentId.push($routeParams.studentid);
+      meanData.getAllModuleScoresForSubject( { "subjectId": subjectId, "classId" : vm.currentClass, "studentId": studentId } )
+      .success(function(modulewisescoredata){
+		var data = modulewisescoredata;
+
+var topicnames = [];
+var chartData = [];
+var xAxisCategories = [];
+for (var key in data) {
+    topicObj = data[key];
+    if(!topicnames[topicObj["posX"]]){
+	topicnames[topicObj["posX"]] = [];
+    }
+    chartData.push([
+		topicObj["posX"], 
+		topicObj["posY"], 
+		topicObj["avgScore"]
+    ]);
+    topicnames[topicObj["posX"]][topicObj["posY"]] = topicObj["topic_name"];
+    xAxisCategories[topicObj["posX"]] = topicObj["syllabusModuleName"];
+}
+
+		Highcharts.chart('container-graph', {
+
+		    chart: {
+			type: 'heatmap',
+			marginTop: 40,
+			marginBottom: 80,
+			plotBorderWidth: 1
+		    },
+
+
+		    title: {
+			text: 'Module Wise Marks Obtained'
+		    },
+
+		    xAxis: {
+			categories: xAxisCategories
+		    },
+
+		    yAxis: {
+			title: 'Score %',
+			labels: {
+			   enabled: false
+			}
+		    },
+
+		    colorAxis: {
+			min: 0,
+			minColor: '#FFFFFF',
+			maxColor: Highcharts.getOptions().colors[0]
+		    },
+
+		    legend: {
+			align: 'right',
+			layout: 'vertical',
+			margin: 0,
+			verticalAlign: 'top',
+			y: 25,
+			symbolHeight: 280
+		    },
+
+		    tooltip: {
+			formatter: function () {
+			    return '<b>' + this.series.xAxis.categories[this.point.x] + '</b> : <br><b>' +
+				this.point.value + '</b> % <br>';
+			}
+		    },
+
+		    series: [{
+			name: 'Topic-wise Score',
+			borderWidth: 1,
+			data: chartData,
+			dataLabels: {
+			    enabled: true,
+			    color: '#000000',
+			    formatter:function(){
+							return topicnames[this.point.x][this.point.y];
+						}
+			}
+		    }]
+
+		});
+
+      });
+}
+/********************** End Topic-wise assignment scores for all modules of a subject for a student ***********************/
+/****** Most Overall attendance for a student  **************/
+if(graphtitle == "overallattendance"){
+      var studentId = [];
+      studentId.push($routeParams.studentid);
+      studentId.push($routeParams.studentid);
+      meanData.getoverallAttendanceOfStudent( { "endDate": vm.schoolCurrentSession.currentSessionEnd, "startDate": vm.schoolCurrentSession.currentSessionStart , "studentId": $routeParams.studentid } )
+      .success(function(overallattendancedata){
+		var data = overallattendancedata[0];
+		if(data.presentCount+data.absentCount > 0){
+			var ownattendancepercentage = ( data.presentCount * 100 )/(data.presentCount+data.absentCount);
+		}
+
+	      meanData.getAverageAttendanceOfSection( { "endDate": "2017-12-31", "startDate": "2017-01-10" , "sectionId": vm.jsondata.currentsection._id } )
+	      .success(function(overallattendanceofsectiondata){
+
+			Highcharts.chart('container-graph', {
+			    chart: {
+				type: 'column'
+			    },
+			    title: {
+				text: 'Attendance Comparison'
+			    },
+			    xAxis: {
+				categories: [
+				    'Attendance'
+				],
+				crosshair: true
+			    },
+			    yAxis: {
+				min: 0,
+				title: {
+				    text: ''
+				}
+			    },
+			    tooltip: {
+				headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+				pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+				    '<td style="padding:0"><b>{point.y:.1f} %</b></td></tr>',
+				footerFormat: '</table>',
+				shared: true,
+				useHTML: true
+			    },
+			    plotOptions: {
+				column: {
+				    pointPadding: 0.2,
+				    borderWidth: 0
+				}
+			    },
+			    series: [
+				{
+					name:'Own',
+					data:[ownattendancepercentage]
+			 	},
+				{
+					name:'Max',
+					data:[overallattendanceofsectiondata[0].maxAttendance]
+			 	},
+				{
+					name:'Average',
+					data:[overallattendanceofsectiondata[0].averageAttendance]
+			 	}
+			    ]
+			});
+
+		});
+      });
+}
+/********************** End overall attendance for a student ***********************/
+
+	    }
+
+
+    }
+
+
+})();

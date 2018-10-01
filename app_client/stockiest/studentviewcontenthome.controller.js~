@@ -1,0 +1,268 @@
+(function() {
+
+  angular
+    .module('meanApp')
+    .controller('studentviewcontenthomeCtrl', studentviewcontenthomeCtrl);
+  studentviewcontenthomeCtrl.$inject = ['$location','$routeParams', 'meanData', '$scope', '$window', '$http', 'authentication'];
+    function studentviewcontenthomeCtrl ($location, $routeParams, meanData, $scope, $window, $http, authentication) {
+      console.log('Bagless-contentcreation controller is running');
+
+		var vm = this;
+
+	vm.contentsubjectId="";
+	vm.contentteacherId="";
+
+<!-- Initialize Quill editor -->
+
+var quillRangeIndex;
+var quillRangeLength;
+
+var Delta = Quill.import('delta');
+
+var toolbarOptions = [
+//  ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+//  ['blockquote', 'code-block'],
+
+// [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+//  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+//  [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+//  [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+//  [{ 'direction': 'rtl' }],                         // text direction
+
+//  [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+//  [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+  [/*{ 'color': [] }, */{ 'background': [] }],          // dropdown with defaults from theme
+  [/*{ 'color': [] }, */'comment'],          // User comments
+//  [{ 'font': [] }],
+//  [{ 'align': [] }],
+
+  ['clean']                                         // remove formatting button
+];
+
+var quill = new Quill('#editor-container', {
+  modules: {
+    toolbar: {
+	container: toolbarOptions,
+	handlers: {
+		comment: function(value) {
+		  $('#noteModal').modal('show');
+		  return false;
+		}
+	}
+    }
+  },
+  readOnly: true,
+  theme: 'bubble',
+  placeholder: 'Compose an epic...'
+});
+
+
+
+
+
+quill.on('selection-change', function(range, oldRange, source) {
+  if (range) {
+    if (range.length == 0) {
+      console.log('User cursor is on', range.index);
+    } else {
+      quillRangeIndex = range.index;
+      quillRangeLength = range.length;
+
+      var text = quill.getText(range.index, range.length);
+      console.log('User has highlighted', text);
+    }
+
+  } else {
+    console.log('Cursor not in the editor');
+  }
+});
+
+/* Render content to Quill editor */
+	meanData.viewContentFull({topicId: $routeParams.topicid})
+	.success(function(data) {//console.log(JSON.stringify(data));
+
+	    if(data.success){
+		var delta = {
+		  ops: data.data
+		};
+		quill.setContents(delta);
+	    }
+	});
+
+
+/**********************************/
+
+/* Render topics and modules */
+	meanData.getContentIdAgainstTopic({topicId: $routeParams.topicid})
+	.success(function(data) {//console.log(JSON.stringify(data));
+
+	meanData.getTeacherFullContent(data[0]._id)
+	.success(function(data) {
+
+var subjects = [];
+for (var key in data) {
+vm.contentsubjectId=data[key].subjectId;
+vm.contentteacherId=data[key].teacherId;
+
+	for (var syllabuskey in data[key]) {
+
+		var topicsArr = [];
+		for (var topickey in data[key][syllabuskey]) {
+			if(data[key][syllabuskey][topickey].name){
+				topicsArr.push({
+					"text" : data[key][syllabuskey][topickey].name,
+					"topicId" : topickey,
+				});
+			}
+		}
+		if(data[key][syllabuskey].name){
+			subjects.push({
+				"text" : data[key][syllabuskey].name,
+				"syllabusModuleId" : syllabuskey,
+				"subjects" : topicsArr,
+			});
+		}
+
+	}
+}
+      $scope.syllabus = [
+                    {
+                        text: "Syllabus", subjects: subjects
+                    }];
+//		console.log(subjects);
+	}); // End of get teacher full content
+	    
+	});
+
+
+/**********************************/
+
+// Topic change
+	$scope.viewTopicContent = function (topicId, topicName) {
+	    if(topicId != $routeParams.topicid){
+
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-104532610-1', 'none');
+	  ga('send', 'event', {
+	   'eventCategory': 'click', //required
+	   'eventAction': 'topic_changed', //required
+	   'eventLabel': '{"studentId":"'+ vm.jsondata._id +'","fromTopic":"'+ $routeParams.topicid +'","toTopic":"'+ topicId +'"}',
+	   'eventValue': 1,
+	   'hitCallback': function() {
+		//$window.location = '/students/viewcontent/' + vm.contentteacherId + '/' + topicId + '/' + vm.jsondata._id + '/home';
+	      //callback function
+	    }
+	 });
+		// End of GA
+
+
+	   }
+	};
+/******** End of topic change ***********/
+
+    $scope.drag = function(ev) {
+        ev.dataTransfer.setData("text/html", ev.target.innerHTML);
+    }
+
+
+
+		vm.user = {};
+		meanData.getUserProfile()
+		.success(function(data) {
+		vm.jsondata = data;
+
+		/*meanData.getCrawl()
+		.success(function(data) {
+			//alert(JSON.stringify(data));
+
+		});*/
+
+<!------------------------------ GA --------------------------------------------------->
+	meanData.getTeacherTopicName($routeParams.topicid)
+	.success(function(data) {//alert(JSON.stringify(data));
+		$scope.selectedTopicName = data[0].name;
+		//var topicName = data[0].name;
+	  eventLabel ="{'user_id':'" + $routeParams.studentid + "','topic_id':'"+ $routeParams.topicid +"','event_time':" + Date.now() + ", 'module_name':'"+ data[0].syllabusmodule +"', 'module_id':'"+ data[0].module +"', 'topic_name':'"+ data[0].name +"'}";
+	  var percentageScroll=0;
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-104532610-1', 'none');
+	  ga('send', 'pageview', {	
+		'dimension1': eventLabel,
+		'dimension2' : $routeParams.topicid,
+		'dimension3' : data[0].syllabusmodule,
+		'dimension4' : data[0].module,
+		'dimension5' : data[0].name,
+		'dimension6' : $routeParams.viewcontenttype,
+		'dimension7' : $routeParams.studentid,
+		'dimension8' : vm.jsondata.currentsection._id, 
+		'dimension9' : data[0].subjectid 
+	  });
+
+	});
+
+
+<!------------------------------------- GA END ----------------------------------------->
+
+
+		});
+
+// Store accumulated changes
+var change = new Delta();
+quill.on('text-change', function(delta) {
+  change = change.compose(delta);
+});
+
+// Save periodically
+setInterval(function() {
+  if (change.length() > 0) {
+    console.log('Saving changes', change);
+
+	meanData.saveStudentHighlightDelta($routeParams.topicid, $routeParams.studentid, change )
+	.success(function(data) {
+		console.log(JSON.stringify(data));
+
+	})
+	.error(function(data) {
+		console.log(JSON.stringify(data));
+
+	});
+
+    change = new Delta();
+
+  }
+}, 5*1000);
+
+
+            $scope.onEnd = function(){
+		$("[data-toggle=popover]").popover({
+		    html: true, 
+
+		});
+            };
+
+	    $scope.contentSaveNotes = function() {
+		    meanData.contentSaveNotes({ "params" : {"topicId": $routeParams.topicid, "rangeIndex":quillRangeIndex, "rangeLength": quillRangeLength, "contentnotes": $scope.contentnotes} })
+		      .success(function(data) {
+			console.log(data);
+		      })
+		      .error(function (e) {
+			console.log(e);
+		      });
+
+	    };
+
+
+    }
+
+
+
+})();

@@ -1,0 +1,399 @@
+(function () {
+
+  angular.module('meanApp', ['ngRoute','ngFileUpload','ngImgCrop','ngSanitize','ngMaterial']);
+
+
+  function config ($routeProvider, $locationProvider) {
+    $routeProvider
+      .when('/', {
+        templateUrl: 'home/home.view.html',
+        controller: 'homeCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/register', {
+        templateUrl: '/auth/register/register.view.html',
+        controller: 'registerCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/login', {
+        templateUrl: '/auth/login/login.view.html',
+        controller: 'loginCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/logout', {
+        templateUrl: '/auth/logout/logout.view.html',
+        controller: 'logoutCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/profile', {
+        templateUrl: '/profile/profile.view.html',
+        controller: 'profileCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/login_external', {
+        templateUrl: '/auth/login_external/login_external.view.html',
+        controller: 'login_externalCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/api/login_external/callback', {
+        templateUrl: '/auth/login_external/login_external.view.html',
+        controller: 'login_externalCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/api/login_external/facebook/callback', {
+        templateUrl: '/auth/login_external/login_external.view.html',
+        controller: 'login_external_facebookCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/api/login_external/twitter/callback', {
+        templateUrl: '/auth/login_external/login_external.view.html',
+        controller: 'login_external_twitterCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/api/login_external/linkedin/callback', {
+        templateUrl: '/auth/login_external/login_external.view.html',
+        controller: 'login_external_linkedinCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/api/login_external', {
+	      templateUrl: '/auth/login_external/login_external.view.html',
+        controller: 'login_externalCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/username', {
+	      templateUrl: '/auth/username/username.view.html',
+        controller: 'usernameCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/x/:username', {
+	      templateUrl: '/profile/public/publicprofile.view.html',
+        controller: 'publicprofileCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/setemail', {
+	      templateUrl: '/auth/setemail/setemail.view.html',
+        controller: 'setEmailCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/emailverify/:emailHash', {
+	      templateUrl: '/auth/setemail/verifyemail.view.html',
+        controller: 'verifyEmailCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/auth/forum', {
+        templateUrl: '/auth/forum/forumprofile.view.html',
+        controller: 'forumprofileCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/team', {
+        templateUrl: '/team/team.view.html',
+        controller: 'teamCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/admin/emailverify/:emailHash', {
+	      templateUrl: '/auth/setemail/adminverifyemail.view.html',
+        controller: 'adminVerifyEmailCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/admin/teachers', {
+        templateUrl: '/admin/teachers.view.html',
+        controller: 'adminteachersCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/admin/students', {
+        templateUrl: '/admin/students.view.html',
+        controller: 'adminstudentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/admin/enrollment', {
+        templateUrl: '/admin/enrollment.view.html',
+        controller: 'enrollmentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/admin/adminstats', {
+        templateUrl: '/admin/adminstats.view.html',
+        controller: 'adminstatsCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/platform/section/:sectionid', {
+        templateUrl: '/teachers/platform.view.html',
+        controller: 'teacherplatformCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/routine', {
+        templateUrl: '/teachers/routine.view.html',
+        controller: 'techroutineCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/contentcreation/:topicid/:contentid', {
+        templateUrl: '/teachers/contentcreation.view.html',
+        controller: 'contentcreationCtrl',
+      })
+      .when('/teachers/classes', {
+        templateUrl: '/teachers/classes.view.html',
+        controller: 'classesCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/content', {
+        templateUrl: '/teachers/content.view.html',
+        controller: 'teachercontentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/teachers', {
+        templateUrl: '/teachers/teachers.view.html',
+        controller: 'teachersCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/teachercontent/:teacherid/:subjectid/:classid', {
+        templateUrl: '/teachers/teachercontent.view.html',
+        controller: 'contentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/assesment/:teacherid', {
+        templateUrl: '/teachers/assesment.view.html',
+        controller: 'teacherassesmentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/evaluateassesmentclass/:assessmentclass/:submissionId', {
+        templateUrl: '/teachers/evaluateassesmentclass.view.html',
+        controller: 'evaluateassesmentclassCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/evaluateassesment/:assessmentclass', {
+        templateUrl: '/teachers/evaluateassesment.view.html',
+        controller: 'evaluateassesmentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/startclass/:sectionid', {
+        templateUrl: '/teachers/startclass.view.html',
+        controller: 'startclassCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/contentcreation', {
+        templateUrl: '/teachers/contentcreation.view.html',
+        controller: 'contentcreationCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/stats/test', {
+        templateUrl: '/teachers/stattest.view.html',
+        controller: 'stattestCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/teachers/viewcontent/:teacherid/:topicid/:userid/:viewcontenttype', {
+        templateUrl: '/teachers/teacherviewcontentclass.view.html',
+        controller: 'teacherviewcontentclassCtrl',
+      })
+      .when('/teachers/contentstats', {
+        templateUrl: '/teachers/contentstats.view.html',
+        controller: 'teachercontentstatsCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/content', {
+        templateUrl: '/students/content.view.html',
+        controller: 'studentcontentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/viewcontent/:teacherid/:topicid/:studentid/:viewcontenttype', {
+        templateUrl: '/students/viewcontenthome.view.html',
+        controller: 'studentviewcontenthomeCtrl',
+      })
+      .when('/students/routine', {
+        templateUrl: '/students/routine.view.html',
+        controller: 'studentsroutineCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/platform/section/:sectionid/:studentid', {
+        templateUrl: '/students/platform.view.html',
+        controller: 'studentplatformCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/assesment/:studentid', {
+        templateUrl: '/students/assesment.view.html',
+        controller: 'studentassesmentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/assesmentsubmit/:assessmentclass/:studentid/:assesmentgroupId/:submissionid', {
+        templateUrl: '/students/assesmentsubmit.view.html',
+        controller: 'studentassesmentsubmitCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/enterclass/:sectionid', {
+        templateUrl: '/students/enterclass.view.html',
+        controller: 'enterclassCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/teachercontent/:studentid/:subjectid/:teacherid', {
+        templateUrl: '/students/teachercontent.view.html',
+        controller: 'studentteachercontentCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/viewcontentlandingpage/home/:contentid', {
+        templateUrl: '/students/viewcontentlandingpage.view.html',
+        controller: 'studentviewcontentlandingpageCtrl',
+      })
+      .when('/teachers/contentstats', {
+        templateUrl: '/teachers/contentstats.view.html',
+        controller: 'teachercontentstatsCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/admin/adminstats', {
+        templateUrl: '/admin/adminstats.view.html',
+        controller: 'adminstatsCtrl',
+        controllerAs: 'vm'
+      })
+      .when('/students/dashboardstats/:studentid', {
+        templateUrl: '/students/dashboardstats.view.html',
+        controller: 'studentdashboardstatsCtrl',
+        controllerAs: 'vm'
+      })
+      .otherwise({redirectTo: '/'});
+
+    // use the HTML5 History API
+    $locationProvider.html5Mode(true);
+  }
+
+  function run($rootScope, $location, authentication, $http) {
+
+    $rootScope.$on('$routeChangeStart', function(event, nextRoute, currentRoute) {
+      if ($location.path() === '/profile' && !authentication.isLoggedIn()) {
+        $location.path('/');
+      }
+      else if ($location.path() === '/username' && !authentication.isLoggedIn()) {
+        $location.path('/');
+      }
+      else if ($location.path() === '/auth/forum' && !authentication.isLoggedIn()) {
+        $location.path('/login_external');
+      }
+    });
+   $rootScope.$on("$routeChangeSuccess", function (e, current) {
+	a=current.params;
+	url = Object.keys(a).map(function(k) {
+	    return encodeURIComponent(k) + '=' + encodeURIComponent(a[k])
+	}).join('&')
+        $rootScope.query = url;
+    });
+
+	$(document).on( 'scroll', function(){
+
+		if ($(window).scrollTop() > 100) {
+			$('.scroll-top-wrapper').addClass('show');
+		} else {
+			$('.scroll-top-wrapper').removeClass('show');
+		}
+	});
+
+   $rootScope.$on("$viewContentLoaded", function (e, current) {
+	$('li.dropdown').find('.fa-angle-down').each(function(){
+		$(this).on('click', function(){
+			if( $(window).width() < 768 ) {
+				$(this).parent().next().slideToggle();
+			}
+			return false;
+		});
+	});
+
+	//Fit Vids
+	if( $('#video-container').length ) {
+		$("#video-container").fitVids();
+	}
+
+	//Initiat WOW JS
+	new WOW().init();
+
+
+		$('.main-slider').addClass('animate-in');
+		$('.preloader').remove();
+		//End Preloader
+
+		if( $('.masonery_area').length ) {
+			$('.masonery_area').masonry();//Masonry
+		}
+
+		var $portfolio_selectors = $('.portfolio-filter >li>a');
+
+		if($portfolio_selectors.length) {
+
+			var $portfolio = $('.portfolio-items');
+			$portfolio.isotope({
+				itemSelector : '.portfolio-item',
+				layoutMode : 'fitRows'
+			});
+
+			$portfolio_selectors.on('click', function(){
+				$portfolio_selectors.removeClass('active');
+				$(this).addClass('active');
+				var selector = $(this).attr('data-filter');
+				$portfolio.isotope({ filter: selector });
+				return false;
+			});
+		}
+
+	$('.timer').each(count);
+	function count(options) {
+		var $this = $(this);
+		options = $.extend({}, options || {}, $this.data('countToOptions') || {});
+		$this.countTo(options);
+	}
+
+	// Search
+	$('.fa-search').on('click', function() {
+		$('.field-toggle').fadeToggle(200);
+	});
+
+	// Contact form
+	var form = $('#main-contact-form');
+	form.submit(function(event){
+		event.preventDefault();
+		var form_status = $('<div class="form_status"></div>');
+		$.ajax({
+			url: $(this).attr('action'),
+			beforeSend: function(){
+				form.prepend( form_status.html('<p><i class="fa fa-spinner fa-spin"></i> Email is sending...</p>').fadeIn() );
+			}
+		}).done(function(data){
+			form_status.html('<p class="text-success">Thank you for contact us. As early as possible  we will contact you</p>').delay(3000).fadeOut();
+		});
+	});
+
+	// Progress Bar
+	$.each($('div.progress-bar'),function(){
+		$(this).css('width', $(this).attr('data-transition')+'%');
+	});
+
+	if( $('#gmap').length ) {
+		var map;
+
+		map = new GMaps({
+			el: '#gmap',
+			lat: 43.04446,
+			lng: -76.130791,
+			scrollwheel:false,
+			zoom: 16,
+			zoomControl : false,
+			panControl : false,
+			streetViewControl : false,
+			mapTypeControl: false,
+			overviewMapControl: false,
+			clickable: false
+		});
+
+		map.addMarker({
+			lat: 43.04446,
+			lng: -76.130791,
+			animation: google.maps.Animation.DROP,
+			verticalAlign: 'bottom',
+			horizontalAlign: 'center',
+			backgroundColor: '#3e8bff',
+		});
+	}
+
+    });
+
+  }
+
+  angular
+    .module('meanApp')
+    .config(['$routeProvider', '$locationProvider', config])
+    .run(['$rootScope', '$location', 'authentication','$http', run]);
+
+})();

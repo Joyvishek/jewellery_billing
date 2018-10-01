@@ -1,0 +1,581 @@
+var mongoose = require('mongoose');
+var School = mongoose.model('School');
+var Section = mongoose.model('Section');
+var ClassRoutine = mongoose.model('ClassRoutine');
+var Syllabusmodule = mongoose.model('Syllabusmodule');
+var Classroom_session = mongoose.model('Classroom_session');
+var Attendance = mongoose.model('Attendance');
+
+
+var ClassRoutine= mongoose.model('ClassRoutine');
+var ctrlSubject  = require('./subjects');
+var Class = mongoose.model('Class');
+var Subject = mongoose.model('Subject');
+
+module.exports.getSchools = function(req, res) {
+
+	//res.status(200).json({redirect_to: req.query.name});
+	if(req.query.name){
+		var name=req.query.name;
+	    School
+	      .find({name:new RegExp(name, "i")})
+	      .exec(function(err, schools) {
+
+		res.status(200).json(schools);
+	      });
+	}else if(req.query.id){
+	    School
+	      .findById(req.query.id)
+	      .exec(function(err, schools) {
+
+		res.status(200).json(schools);
+	      });
+	}else{
+	    School
+	      .find()
+	      .exec(function(err, schools) {
+
+		res.status(200).json(schools);
+	      });
+	}
+
+};
+
+module.exports.getSection = function(req, res) {
+
+	if(req.query.sectionId){
+	    Section
+	      .findById(req.query.sectionId).populate('students')
+	      .exec(function(err, section) {
+
+		res.status(200).json(section);
+	      });
+	}else{
+	    Section
+	      .find()
+	      .exec(function(err, sections) {
+
+		res.status(200).json(sections);
+	      });
+	}
+
+};
+
+// Returns class routine for the section in this current year
+module.exports.getRoutine = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId){
+   		var d = new Date(),year = d.getFullYear();
+		var daysOfWeek=["monday","tuesday","wednesday","thursday","friday","saturday"];
+		var jsonRoutine={};
+console.log(req.query.sectionId);
+		for (var i in daysOfWeek) {
+			getSectionRoutineAsc(daysOfWeek[i], function (routine){
+				console.log(routine);
+				if(Object.keys(routine).length == daysOfWeek.length){
+					return res.status(200).json(routine);
+				}
+			});
+		}
+
+		function getSectionRoutineAsc(day, routineCallback){//console.log(sectionId);
+			ClassRoutine.find({ 'sectionId' : req.query.sectionId, 'isCurrentSession' : true, "scheduleDaysRuns":{ "$in" : [day]} }).populate("subjectId").populate("teacherId").exec(function(err, doc){
+			    if (err) return res.send(500, { error: err });
+			    if(doc){ // if found return routine for the section
+			         doc = JSON.parse(JSON.stringify(doc));
+			         /*for(var item of doc) {
+     					item["subjectName"]= ctrlSubject.getSubjectName(item.subjectId);
+  					 }*/
+			    	 jsonRoutine[day]=doc;
+				 routineCallback(jsonRoutine);
+			    }else{
+			    	routineCallback(err);
+			    }
+			});
+		}
+		//return res.status(200).json(jsonRoutine);
+	}else{
+		return res.status(400).json({"message":"Please specify section id"});
+	}
+  }
+
+};
+
+
+// Returns time allotted
+module.exports.getTimeAllotted = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId || req.query.teacherId){
+   		var d = new Date(),year = d.getFullYear();
+		var daysOfWeek=["monday","tuesday","wednesday","thursday","friday","saturday"];
+		var jsonRoutine={};
+
+		ClassRoutine.aggregate({$match:{"isCurrentSession":true} },
+		   {"$lookup": {
+			"from" : "users",
+			"localField" : "teacherId",
+			"foreignField" : "_id",
+			"as" : "teacherObjects"
+		   }},
+		   { "$unwind": "$teacherObjects" },
+			{$group : { 
+					_id:{
+						"teacherId": "$teacherId",
+						"teacherName": "$teacherObjects.name"
+					},
+					alottedTime: {$sum :  {$subtract:["$scheduleEnd","$scheduleBegin"] }}
+				} 
+			}, 
+		function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ // if found return routine for the section
+			 return res.status(200).json(doc);
+		    }else{
+		    	return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+// Returns subject-wise syllabus
+module.exports.getSyllabus = function(req, res) {
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.classId){
+   		var d = new Date(),year = d.getFullYear();
+		var filterParams = {};
+		filterParams.classId = req.query.classId;
+		filterParams.isActive = true;
+		if(req.query.subjectId){
+			filterParams.subjectId = req.query.subjectId;
+		}
+		Syllabusmodule.find(filterParams).populate({path: 'syllabusModules', match:{isActive: true}, populate:{path: 'submodules', match: {isActive: true} }} ).populate('classId').populate('subjectId').populate('topics').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Returns teacher of a school
+module.exports.getSchoolTeachers = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.schoolId){
+   		var d = new Date(),year = d.getFullYear();
+
+		School.find({ _id: req.query.schoolId }).populate('teachers').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Get sections of a school
+module.exports.getSchoolSections = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.schoolId){
+
+		School.find({ _id: req.query.schoolId }, 'sections').populate('sections').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Current ongoing session in a section
+module.exports.getOngoingSession = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId){
+   		var d = new Date();
+		d.setHours(0, 0, 0, 0);
+		Classroom_session.find({ 'sectionId': req.query.sectionId, 'startTime': {"$gte": d}, 'endTime': {$exists: false} }).populate({path: 'teacherId', select: '_id name'}).populate({path: 'subjectId', select: '_id name'}).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			    return res.status(200).json(doc);
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Get today's attendance Percentage
+module.exports.getTodaysAttendance = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId){
+   		var d = new Date();
+		d.setHours(0, 0, 0, 0);
+		Attendance.aggregate({$match: { 'sectionId': new mongoose.Types.ObjectId(req.query.sectionId), 'attendanceDate': {"$gte": d} }}, {$group : { "_id":"$isPresent",count : {$sum : 1 }} },
+		    { "$group": {
+			"_id": null,
+			"presentCount": {
+			    "$sum": {
+				"$cond": [ "$_id", 1, 0 ]
+			    }
+			},
+			"absentCount": {
+			    "$sum": {
+				"$cond": [ "$_id", 0, 1 ]
+			    }
+			}
+		    }}
+		 ).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+				var attendanceP = 0;
+				if(doc.length!=0){
+					var presentCount = doc[0].presentCount;
+					var absentCount = doc[0].absentCount;
+					var totalAttendance = presentCount + absentCount;
+
+					if(totalAttendance > 0){
+						attendanceP = Math.round(100*presentCount/totalAttendance);
+					}
+				}
+			    	return res.status(200).json({"attendancePercentage":attendanceP});
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Get class teacher and monitor
+module.exports.getClassTeacherMonitor = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId){
+		Section.findOne({ _id : req.query.sectionId }, {_id: 1, classTeacher: 1, classMonitor: 1}).populate({path: 'classTeacher', select: '_id name profilepic'}).populate({path: 'classMonitor', select: '_id name profilepic'}).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			    return res.status(200).json(doc);
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Returns all classes sections against a schoolId
+module.exports.getAllClassSection = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.schoolId){
+
+/*		School.find({ _id: req.query.schoolId }, 'sections').populate('sections').distinct()
+		.exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 
+			 return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+*/	
+		School.aggregate([
+		   {"$match": {_id: mongoose.Types.ObjectId(req.query.schoolId) }},
+		   {"$lookup": {
+			"from" : "sections",
+			"localField" : "sections",
+			"foreignField" : "_id",
+			"as" : "sectionObjects"
+		   }},
+		   { "$unwind": "$sectionObjects" },
+		   { "$group" : {
+			"_id" : "$sectionObjects.classId"
+		   }},
+		   {"$lookup": {
+			"from" : "classes",
+			"localField" : "_id",
+			"foreignField" : "_id",
+			"as" : "classObjects"
+		   }},
+		   { "$unwind": "$classObjects" },
+		   {"$lookup": {
+			"from" : "sections",
+			"localField" : "classObjects.sections",
+			"foreignField" : "_id",
+			"as" : "sectionObjects"
+		   }}
+		])
+		.exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 
+			 return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+
+// Get Todays attendance data of students
+module.exports.getStudentAttendance = function(req, res) {
+    var start_date = new Date();
+    start_date.setHours(0,0,0,0);
+
+    var end_date = new Date();
+    end_date.setHours(23,59,59,999);
+	if(req.query.studentIds){
+	    Attendance
+	      .find({'studentId': { $in: req.query.studentIds }, 'attendanceDate': {$gte: start_date, $lt: end_date}} )
+	      .exec(function(err, attendance) {
+
+		res.status(200).json(attendance);
+	      });
+	}else{
+	    Section
+	      .find()
+	      .exec(function(err, sections) {
+
+		res.status(200).json(sections);
+	      });
+	}
+
+};
+
+// Get last session in a section by a teacher of a subject
+module.exports.getLastSessionOfTeacherOfSubject = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId && req.query.teacherId && req.query.subjectId){
+   		var d = new Date();
+		d.setHours(0, 0, 0, 0);
+		Classroom_session.find({ 'sectionId': req.query.sectionId,'teacherId': req.query.teacherId,'subjectId': req.query.subjectId, 'endTime': {$exists: true} }).populate({path: 'teacherId', select: '_id name'}).populate({path: 'subjectId', select: '_id name'}).sort({'startTime': -1}).limit(1).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			    return res.status(200).json(doc);
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Get attendance percentage on a day in a section
+module.exports.getAttendanceOnADay = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId && req.query.date){
+   		var d = new Date(req.query.date);
+		d.setHours(0, 0, 0, 0);
+   		var d2 = new Date(req.query.date);
+		d2.setHours(23, 59, 59, 0);
+console.log(d2.toString());
+		Attendance.aggregate({$match: { 'sectionId': new mongoose.Types.ObjectId(req.query.sectionId), 'attendanceDate': {"$gte": d, "$lte": d2} }}, {$group : { "_id":"$isPresent",count : {$sum : 1 }} },
+		    { "$group": {
+			"_id": null,
+			"presentCount": {
+			    "$sum": {
+				"$cond": [ "$_id", 1, 0 ]
+			    }
+			},
+			"absentCount": {
+			    "$sum": {
+				"$cond": [ "$_id", 0, 1 ]
+			    }
+			}
+		    }}
+		 ).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+				var attendanceP = 0;
+				if(doc.length!=0){
+					var presentCount = doc[0].presentCount;
+					var absentCount = doc[0].absentCount;
+					var totalAttendance = presentCount + absentCount;
+
+					if(totalAttendance > 0){
+						attendanceP = Math.round(100*presentCount/totalAttendance);
+					}
+				}
+			    	return res.status(200).json({"attendancePercentage":attendanceP});
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Get class against a sectionId
+module.exports.getClassAgainstSection = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId){
+		Class.findOne({ "sections" : req.query.sectionId }).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			    return res.status(200).json(doc);
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+module.exports.getSchoolCurrentSession = function(req, res) {
+
+	if(req.query.schoolId){
+	    School
+	      .findById(req.query.schoolId)
+	      .select('currentSessionStart currentSessionEnd')
+	      .exec(function(err, session) {
+
+		res.status(200).json(session);
+	      });
+	}else{
+		res.status(400).json({"message":"Invalid Request"});
+	}
+
+};
+
+// Returns subjects of a section
+module.exports.getSchoolSubjectsofaSection = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.sectionId){
+
+		ClassRoutine.find({ 'sectionId': req.query.sectionId, 'isLunch' : false})
+		.distinct('subjectId').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 Subject.find({'_id' : {$in: doc}})
+			 .exec( function(err, subjects){
+			    return res.status(200).json(subjects);
+			 });
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+

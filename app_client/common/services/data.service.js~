@@ -1,0 +1,1392 @@
+(function() {
+
+  angular
+    .module('meanApp')
+    .service('meanData', meanData);
+
+  meanData.$inject = ['$http', 'authentication','Upload','$timeout','$window'];
+  function meanData ($http, authentication,Upload,$timeout,$window) {
+
+    var getProfile = function (routeParams) {
+	if(routeParams.sso && routeParams.sig){
+	      return $http.get('/api/forum/profile?sso='+routeParams.sso+'&sig='+routeParams.sig, {
+		headers: {
+		  Authorization: 'Bearer '+ authentication.getToken()
+		}
+	      });
+	}else{
+      return $http.get('/api/profile?sso='+routeParams.sso+'&sig='+routeParams.sig, {
+		headers: {
+		  Authorization: 'Bearer '+ authentication.getToken()
+		}
+		});
+	}
+    };
+    var googleCallback = function (routeParams) {
+      return $http.get('/api/auth/google?code='+routeParams.code
+      );
+    };
+    var getCourses = function (params) {
+	var config = {
+	 params: params,
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/courses',config);
+    };
+    var getBotgames = function (params) {
+	var config = {
+	 params: params,
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/botgames',config);
+    };
+    var getCourseVideo = function (params) {
+	var config = {
+	 //params: params,
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/courses/videos/1234',config);
+    };
+    var getTags = function () {
+	var config = {
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/tags',config);
+    };
+    var toggleWishlist = function (params) {
+	var config = {
+	 params: params,
+	 headers : {'Accept' : 'application/json',
+		     Authorization: 'Bearer '+ authentication.getToken()}
+	};
+      return $http.get('/api/wishlist/toggle',config);
+    };
+    var isWishlisted = function (params) {
+	var config = {
+	 params: params,
+	 headers : {'Accept' : 'application/json',
+		     Authorization: 'Bearer '+ authentication.getToken()}
+	};
+      return $http.get('/api/wishlist/check',config);
+    };
+    var getForumProfile = function (routeParams) {
+	if(routeParams.sso && routeParams.sig){
+	      return $http.get('/api/forum/profile?sso='+routeParams.sso+'&sig='+routeParams.sig, {
+		headers: {
+		  Authorization: 'Bearer '+ authentication.getToken()
+		}
+	      });
+	}
+    };
+
+    var isUsernameUnique = function (username) {
+      return $http.get('/api/username?username='+username, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+    var saveUsername = function (username) {
+	var config = {
+	 params: {username : username},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/username/save', config, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var saveUserType = function (usertype,setemail) {
+	var config = {
+	 params: {user:{ usertype : usertype }, setemail: setemail},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/userdetails/save', config, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var saveUserRollno = function (rollno,setemail) {
+	var config = {
+	 params: {user:{ rollno : rollno }, setemail: setemail},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/userdetails/save', config, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var isEmailUnique = function (setemail) {
+      return $http.get('/api/email?setemail='+setemail, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+    var saveEmail = function (setemail) {
+	var config = {
+	 params: {setemail : setemail},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/email/save', config, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var getPublicProfile = function (username) {
+	var config = {
+	 params: {username : username},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/profile/public', config);
+    };
+
+    var getSectionRoutine = function (sectionid) {
+  var config = {
+   params: {sectionId : sectionid},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/section/getRoutine', config);
+    };
+
+    var getTeacherRoutine = function (teacherId) {
+  var config = {
+   params: {teacherId : teacherId},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/teacher/getRoutine', config);
+    };
+
+    var getSchoolTeachers = function (schoolId) {
+  var config = {
+   params: {schoolId : schoolId},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/section/getteachers', config);
+    };
+
+    var getSection = function (sectionid) {
+  var config = {
+   params: {sectionId : sectionid},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/getsection', config);
+    };
+
+    var getClassTeacherMonitor = function (sectionid) {
+  var config = {
+   params: {sectionId : sectionid},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/section/getclassteachermonitor', config);
+    };
+
+    var getTeacherSubjects = function (teacherId) {
+  var config = {
+   params: {teacherId : teacherId},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/teacher/getteachersubjects', config);
+    };
+//// Get all classesses and sections against a schoolId
+    var getAllClassSection = function (schoolId) {
+  var config = {
+   params: {schoolId : schoolId},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/getallclasssection', config);
+    };
+
+//// Get Todays attendance data of students
+    var getStudentAttendance = function (studentIds) {
+  var config = {
+   params: {studentIds : studentIds},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/getstudentsattendance', config);
+    };
+    //Post assignment
+    var CreateNewAssessmentGroup = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/teacher/assignment/createnewassessmentgroup', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+
+    var CreateNewAssignment = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/teacher/assignment/createnewassignment', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+    //EditAssignment
+      var EditAssignment = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/teacher/assignment/editassignment', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+    // Post teacher take attendance
+    var takeAttendance = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/teacher/takestudentattendance', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+    //GET today’s attendance %
+      var getTodaysAttendance = function (sectionid) {
+  var config = {
+   params: {sectionId : sectionid},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/getontodaysattendance', config);
+    };
+
+    var updateProfile = function (profileParams) {
+      return $http.post('/api/profile', profileParams, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var contentSaveNotes = function (params) {
+      return $http.post('/api/contentcreation/savestudentnotes', params, {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var isEmailVerified = function (routeParams) {
+      return $http.get('/api/email/isverified', {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var getUserProfile = function (routeParams) {
+      return $http.get('/api/profile', {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var uploadImage = function (file,jsondata,modal) {
+      file.upload = Upload.upload({
+        url: 'api/upload/profilepic',
+        data: {file: file},
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+
+	    file.upload.then(function (response) {
+	      $timeout(function () {
+		jsondata.profilepic = response.data.data;
+		jsondata.successmsg=true;
+		//return response.data;
+	      });
+	    }, function (response) {
+	      //if (response.status > 0)
+		//$scope.errorMsg = response.status + ': ' + response.data;
+	    }, function (evt) {
+
+	      // Math.min is to fix IE which reports 200% sometimes
+	      //file.progress = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));
+	    });
+    };
+    var connectToUser = function (username) {
+	var config = {
+	 params: {username : username},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/profile/public/connect', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+    var acceptConnect = function (userId) {
+	var config = {
+	 params: {userId : userId},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/profile/public/acceptconnect', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+    var getConnectionRequests = function (routeParams) {
+      return $http.get('/api/get/connectionrequests', {
+		headers: {
+		  Authorization: 'Bearer '+ authentication.getToken()
+		}
+		});
+    };
+
+    var getConnections = function (routeParams) {
+      return $http.get('/api/get/connections', {
+		headers: {
+		  Authorization: 'Bearer '+ authentication.getToken()
+		}
+		});
+    };
+
+    var resendMail = function () {
+      return $http.get('/api/email/resend', {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+
+    var isFirstLogin = function (routeParams) {
+      return $http.get('/api/profile/isfirstlogin', {
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+    };
+// Get school names starting with ...
+    var getSchools = function (params) {
+	var config = {
+	 params: params,
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/schools/names',config);
+    };
+// Approve joining requests of Students / Teachers by admin
+    var approveByAdmin = function (userId) {
+	var config = {
+	 params: {userId : userId},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/admin/approvebyadmin', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+// Get crawling
+    var getCrawl = function (contenttype,contentstring) {
+	var config = {
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/contentcreation/getcrawl?contenttype='+contenttype+'&contentstring='+contentstring, config);
+    };
+
+// Save incremental content change
+    var saveContentDelta = function (topicId, delta) {
+	var config = {
+	 params: {topicId : topicId, delta: delta},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/contentcreation/savecontentdelta', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+// View content
+    var viewContent = function (params) {
+	var config = {
+	 params: params,
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/student/viewcontent',config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+// Get full content against a content Id
+    var getTeacherFullContent = function (contentId) {
+	var config = {
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/teacher/getteacherfullcontent?contentId='+contentId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+    var getAssessmentClassSubmissions = function (assessmentclass) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/assignment/getassessmentclasssubmissions?assessmentclass='+assessmentclass,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+// Get full content againstgetTeacherTopicName a content Id
+    var getTeacherTopicName = function (topicId) {
+	var config = {
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/teacher/getteachertopicname?topicId='+topicId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+// Save highlighted texts by students
+    var saveStudentHighlightDelta = function (topicId, studentId, delta) {
+	var config = {
+	 params: {topicId : topicId, studentId : studentId, delta: delta},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/contentcreation/savestudenthighlightdelta', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+// Save / Edit full content against a topic
+    var saveFullContent = function (topicId, content) {
+	var config = {
+	 params: {topicId : topicId, fullcontent: content},
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/contentcreation/savefullcontent', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+  // student enter class
+    var enterClass = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.post('/api/student/enterclass', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+   //save new user
+    var saveUserDetails = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.post('/api/userdetails/save', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    }; 
+// View content full
+    var viewContentFull = function (params) {
+	var config = {
+	 params: params,
+	 headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/student/viewcontentfull',config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	}
+        });
+    };
+
+    var submitAssessmentClass = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.post('/api/student/assignment/submitassessmentclass',config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+    var editAssessmentClassSubmission = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.post('/api/student/assignment/editassessmentclasssubmission',config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };    
+
+    //post assignment to student on start class
+     var assignToClass = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.post('/api/teacher/assignment/assigntoclass',config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+    var editAssignToClass = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.post('/api/teacher/assignment/editassigntoclass',config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+    var getTeacherAssessmentGroups = function (teacherId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/getteacherassessmentgroups?teacherId='+teacherId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+    //getOngoingSession
+    var getOngoingSession = function (sectionId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/schools/getongoingsession?sectionId='+sectionId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+     var getGivenAssessmentClass = function (sectionId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/student/assignment/getgivenassessmentclass?sectionId='+sectionId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+    var getAssesmentDetails = function (assesmentgroupId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/student/enterclass/assesmentsubmit/getassesmentdetails?assesmentgroupId='+assesmentgroupId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+    var getAssesmentDetailsSubmission = function (submissionId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/assignment/getassesmentdetailssubmission?submissionId='+submissionId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+    var getStudentRoutineSubjects = function (studentId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/student/getstudentsubjectsroutine?studentId='+studentId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+    var getSchoolSections = function (schoolId) {
+  var config = {
+   params: {schoolId : schoolId},
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.get('/api/schools/getschoolsections', config);
+    };
+// Returns subjects on which a teacher takes class according to routine
+    var getTeacherRoutineSubjects = function (teacherId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/getteachersubjectsroutine?teacherId='+teacherId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+    var getStudentDetails = function (studentIds) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/student/getstudentdetails?studentIds='+studentIds,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+     var getTeacherRoutineClass = function (teacherId, subjectId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/getteacherclassesroutine?teacherId='+teacherId+'&subjectId='+subjectId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+  var EditAssessmentGroup = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.post('/api/teacher/assignment/editassessmentgroup',config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+
+    var CreateNewContent = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/contentcreation/createnewcontent', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+
+    var createContentTopic = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/contentcreation/createcontenttopic', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+
+    var evaluateSubmissionMCQ = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/teacher/assignment/evaluatesubmissionmcq', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+
+     var getTeacherFullContent = function (contentId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/getteacherfullcontent?contentId='+contentId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+     var getTeacherContent = function (teacherId, subjectId, classId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/getteachercontent?teacherId='+teacherId+'&subjectId='+subjectId+'&classId='+classId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+    var EditCourseContent = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/contentcreation/editcoursecontent', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+});
+    };
+
+     var getStudentRoutineTeachers = function (studentId, subjectId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/student/getstudentclassteachers?studentId='+studentId+'&subjectId='+subjectId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+     var getClassAgainstSection = function (sectionId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/schools/getclassagainstsection?sectionId='+sectionId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+// Save classroom session details in local storage
+    var saveClassroomSession = function (classroomSessionId, sectionId) {
+      $window.localStorage['classroomSessionId'] = classroomSessionId;
+      $window.localStorage['currentsectionId'] = sectionId;
+    };
+// Retrieve classroom session details from local storage
+    var getClassroomSession = function () {
+      return $window.localStorage['classroomSessionId'];
+    };
+//Retreive current sectionId
+    var getClassroomSection = function () {
+      return $window.localStorage['currentsectionId'];
+    }; 
+    // Post teacher starts classroom session
+    var teacherStartClass = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/teacher/startclass', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  	}
+    });
+
+  };
+
+    // Post teacher ends classroom session
+    var teacherEndClass = function (params) {
+  var config = {
+   params: params,
+   headers : {'Accept' : 'applicattion/json',
+      Authorization: 'Bearer '+ authentication.getToken()
+    }
+  };
+      return $http.post('/api/teacher/endclass', config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  	}
+    });
+
+  };
+
+// remove classroom session details from local storage
+    var removeClassroomSession = function () {
+         $window.localStorage.removeItem('classroomSessionId');
+    };
+
+// get day of week based student attendance
+     var getDayOfWeekBasedStudentAttendance = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+
+      return $http.get('/api/analytics/students/attendance/dayofweekbased' , config);
+    };
+
+// Weekly attendance of overall class
+     var getWeeklyStudentAttendance = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+
+      return $http.get('/api/analytics/students/attendance/weekly' , config);
+    };
+
+// Topic-wise assignment scores for all modules of a subject and class for students
+     var getAllModuleScoresForSubject = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+
+      return $http.get('/api/analytics/teachers/content/topicwisescoresallmodulessubject' , config);
+    };
+
+// Topic-wise number of students having scores < 30%, >=30-50%, >=50-80%, >= 80% of all modules
+// of a particular subject in a class 
+     var getClassSubjectScoreBracket = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+
+      return $http.get('/api/analytics/teachers/content/topicwisescorebracketofaclass' , config);
+    };
+
+// Student-wise score vs attendance of an array of studentIds of a startDate and endDate
+   var getStudentWiseScoreVsAttendance = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/analytics/teachers/studentwisescorevsattendance' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Student-wise score vs pageviews of an array of studentIds of a startDate and endDate
+   var getStudentWiseScoreVsPageviews = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+      return $http.post('/api/analytics/teachers/studentwisescorevspageviews' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Most viewed topics
+   var getTopThreeTopicsViewed = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/analytics/teachers/content/topthreetopicsviewd' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Overall time spent across all topics of a content
+   var getOverallTimeSpentAcrossAllTopics = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/analytics/teachers/content/overalltimespentacrossalltopics' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+//  Daily Pageviews of a particular teacher's content
+   var getDailyPageViewsOfTeacher = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/analytics/teachers/content/dailypageviews' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+//  Topic-wise notes taken against a content ID
+   var getTopicWiseNotesTaken = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/analytics/teachers/topicwisenotesttaken' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+//  Topic-wise number of students having scores 0-10%, 10-20%... of all modules
+   var getClassSubjectScoreBracketGranular = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/analytics/teachers/content/topicwisescorebracketofaclassgranular' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+//  Teacher-wise Monthly number of Classroom sessions
+   var getTeacherWiseMonthlyClassroomSession = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/analytics/admin/teacherwisemonthlyclassroomsession' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Daily Pageviews of all teachers in a school
+   var getDailyPageViewsOfAllTeachers = function (params) {var getTeacherContent = function (teacherId, subjectId, classId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/getteachercontent?teacherId='+teacherId+'&subjectId='+subjectId+'&classId='+classId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+      return $http.get('/api/analytics/teachers/content/allteachersdailypageviews' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Teacher-wise number of topics content created for
+   var getTeacherWiseNumberOfTopicCreated = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/analytics/admin/teacherwisenumberoftopiccreated' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// teachers taking class now
+   var getTeachersTakingClass = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/analytics/admin/teacherstakingclass' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Returns time allotted
+   var getTimeAllotted = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/schools/section/getTimeAllotted' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Average Time taking attendance for a teacher
+   var getAverageTimeTakingAttendance = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/analytics/teachers/attendance/averagetimetakingattendance' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Overall attendance percentage over a date range
+   var getoverallAttendanceOfStudent = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'
+	   }
+	};
+      return $http.get('/api/analytics/students/attendance/overallpercentage' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Overall average / maximum attendance of a section over a date range
+   var getAverageAttendanceOfSection = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'
+	   }
+	};
+      return $http.get('/api/analytics/students/attendance/averagepercentageofSection' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Upload asset image
+    var uploadAssetImage = function (file,scope) {
+      file.upload = Upload.upload({
+        url: 'api/upload/assetimage',
+        data: {file: file},
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+        }
+      });
+
+	    file.upload.then(function (response) {
+	      $timeout(function () {console.log(response.data)
+		scope.successmsg=true;
+		scope.assets.images.push({'assetUrl' : response.data.data});
+		//return response;
+	      });
+	    }, function (response) {
+	      //if (response.status > 0)
+		//$scope.errorMsg = response.status + ': ' + response.data;
+	    }, function (evt) {
+
+	      // Math.min is to fix IE which reports 200% sometimes
+	      //file.progress = Math.min(100, parseInt(100.0 * evt.loaded / evt.total));
+	    });
+    };
+// Get syllabus
+ var getSyllabus = function (classId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/schools/section/getsyllabus?classId='+classId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+// getTeacherAssessmentGroupsAgainstTopic 
+    var getTeacherAssessmentGroupsAgainstTopic = function (teacherId, classId, topicId) {
+  var config = {
+   headers : {'Accept' : 'application/json'}
+  };
+      return $http.get('/api/teacher/getassessmentgroupsagainsttopic?teacherId='+teacherId+'&classId='+classId+'&topicId='+topicId,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+  }
+        });
+    };
+
+// Get assets
+   var getAssets = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+      return $http.get('/api/assets/getassets' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// Get current session for a school
+     var getSchoolCurrentSession = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json'}
+	};
+
+      return $http.get('/api/schools/getcurrentsession' , config);
+    };
+
+// Get coursecontentId against topicId
+     var getContentIdAgainstTopic = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+
+      return $http.get('/api/student/coursecontent/getcontentidagainsttopic' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+    };
+
+// get subjects of a section
+     var getSchoolSubjectsofaSection = function (params) {
+	var config = {
+	   params: params,
+	   headers : {'Accept' : 'application/json',
+     		       Authorization: 'Bearer '+ authentication.getToken()
+	   }
+	};
+
+      return $http.get('/api/schools/getsubjectsofasection' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+	  }
+	});
+};
+
+       var getAssessmentScoreAgainstSubmissionId = function (params) {
+  var config = {
+     params: params,
+     headers : {'Accept' : 'application/json',
+               Authorization: 'Bearer '+ authentication.getToken()
+     }
+  };
+
+      return $http.get('/api/teacher/assignment/getassessmentscoreagainstsubmissionid' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+    }
+  });
+    };
+
+    var getIfStudentEnteredClass = function (params) {
+  var config = {
+     params: params,
+     headers : {'Accept' : 'application/json',
+               Authorization: 'Bearer '+ authentication.getToken()
+     }
+  };
+
+      return $http.get('/api/student/ifenteredclass' , config,{
+        headers: {
+          Authorization: 'Bearer '+ authentication.getToken()
+    }
+  });
+    };
+
+    return {
+      getProfile : getProfile,
+      isUsernameUnique : isUsernameUnique,
+      saveUsername : saveUsername,
+      googleCallback : googleCallback,
+      getCourses : getCourses,
+      getCourseVideo : getCourseVideo,
+      getTags : getTags,
+      toggleWishlist : toggleWishlist,
+      isWishlisted : isWishlisted,
+      getForumProfile : getForumProfile,
+      isEmailUnique : isEmailUnique,
+      saveEmail : saveEmail,
+      saveUserType : saveUserType,
+      getPublicProfile : getPublicProfile,
+      updateProfile : updateProfile,
+      isEmailVerified : isEmailVerified,
+      uploadImage : uploadImage,
+      connectToUser : connectToUser,
+      acceptConnect : acceptConnect,
+      getConnectionRequests : getConnectionRequests,
+      getConnections : getConnections,
+      resendMail : resendMail,
+      getBotgames : getBotgames,
+      getSchools : getSchools,
+      approveByAdmin : approveByAdmin,
+      getUserProfile : getUserProfile,
+      getSectionRoutine : getSectionRoutine,
+      getSection : getSection,
+      takeAttendance : takeAttendance,
+      getTodaysAttendance : getTodaysAttendance,
+      getCrawl : getCrawl,
+      saveContentDelta : saveContentDelta,
+      viewContent : viewContent,
+      getSchoolTeachers : getSchoolTeachers,
+      getTeacherRoutine : getTeacherRoutine,
+      getAllClassSection : getAllClassSection,
+      getClassTeacherMonitor : getClassTeacherMonitor,
+      getTeacherSubjects : getTeacherSubjects,
+      getStudentAttendance : getStudentAttendance,
+      getTeacherTopicName : getTeacherTopicName,
+      saveFullContent : saveFullContent,
+      viewContentFull : viewContentFull,
+      saveStudentHighlightDelta : saveStudentHighlightDelta,
+      getTeacherRoutineSubjects : getTeacherRoutineSubjects,
+      CreateNewAssignment : CreateNewAssignment,
+      CreateNewAssessmentGroup : CreateNewAssessmentGroup,
+      getTeacherRoutineClass : getTeacherRoutineClass,
+      getStudentRoutineSubjects : getStudentRoutineSubjects,
+      getSchoolSections : getSchoolSections,
+      EditAssignment : EditAssignment,
+      getStudentDetails : getStudentDetails,
+      saveUserDetails : saveUserDetails,
+      assignToClass : assignToClass,
+      editAssignToClass : editAssignToClass,
+      getTeacherAssessmentGroups : getTeacherAssessmentGroups,
+      EditAssessmentGroup : EditAssessmentGroup,
+      createContentTopic : createContentTopic,
+      getTeacherFullContent : getTeacherFullContent,
+      getTeacherContent : getTeacherContent,
+      EditCourseContent : EditCourseContent,
+      getStudentRoutineSubjects : getStudentRoutineSubjects,
+      getSchoolSections : getSchoolSections,
+      EditAssignment : EditAssignment,
+      getStudentDetails : getStudentDetails,
+      getStudentRoutineTeachers : getStudentRoutineTeachers,
+      getClassAgainstSection : getClassAgainstSection,
+      contentSaveNotes : contentSaveNotes,
+      saveClassroomSession : saveClassroomSession,
+      getClassroomSession : getClassroomSession,
+      teacherStartClass : teacherStartClass,
+      teacherEndClass : teacherEndClass,
+      removeClassroomSession : removeClassroomSession,
+      getDayOfWeekBasedStudentAttendance : getDayOfWeekBasedStudentAttendance,
+      getWeeklyStudentAttendance : getWeeklyStudentAttendance,
+      getAllModuleScoresForSubject : getAllModuleScoresForSubject,
+      getClassSubjectScoreBracket : getClassSubjectScoreBracket,
+      getStudentWiseScoreVsAttendance : getStudentWiseScoreVsAttendance,
+      getStudentWiseScoreVsPageviews : getStudentWiseScoreVsPageviews,
+      getTopThreeTopicsViewed : getTopThreeTopicsViewed,
+      getOverallTimeSpentAcrossAllTopics : getOverallTimeSpentAcrossAllTopics,
+      getDailyPageViewsOfTeacher : getDailyPageViewsOfTeacher,
+      getTopicWiseNotesTaken : getTopicWiseNotesTaken,
+      getClassSubjectScoreBracketGranular : getClassSubjectScoreBracketGranular,
+      getTeacherWiseMonthlyClassroomSession : getTeacherWiseMonthlyClassroomSession,
+      getDailyPageViewsOfAllTeachers : getDailyPageViewsOfAllTeachers,
+      getGivenAssessmentClass : getGivenAssessmentClass,
+      getAssesmentDetails : getAssesmentDetails,
+      submitAssessmentClass : submitAssessmentClass,
+      editAssessmentClassSubmission : editAssessmentClassSubmission,
+      getAssessmentClassSubmissions : getAssessmentClassSubmissions,
+      getAssesmentDetailsSubmission : getAssesmentDetailsSubmission,
+      evaluateSubmissionMCQ : evaluateSubmissionMCQ,
+      getTeacherWiseNumberOfTopicCreated : getTeacherWiseNumberOfTopicCreated,
+      getTeachersTakingClass : getTeachersTakingClass,
+      getTimeAllotted : getTimeAllotted,
+      getAverageTimeTakingAttendance : getAverageTimeTakingAttendance,
+      getoverallAttendanceOfStudent : getoverallAttendanceOfStudent,
+      getAverageAttendanceOfSection : getAverageAttendanceOfSection,
+      uploadAssetImage : uploadAssetImage,
+      getAssets : getAssets,
+      CreateNewContent : CreateNewContent,
+      enterClass : enterClass,
+      getOngoingSession : getOngoingSession,
+      getSyllabus : getSyllabus,
+      getTeacherAssessmentGroupsAgainstTopic : getTeacherAssessmentGroupsAgainstTopic,
+      getClassroomSection : getClassroomSection,
+      getSchoolCurrentSession : getSchoolCurrentSession,
+      getContentIdAgainstTopic : getContentIdAgainstTopic, 
+      getSchoolSubjectsofaSection : getSchoolSubjectsofaSection,
+      getContentIdAgainstTopic : getContentIdAgainstTopic,
+      getAssessmentScoreAgainstSubmissionId : getAssessmentScoreAgainstSubmissionId,
+      getIfStudentEnteredClass : getIfStudentEnteredClass
+    };
+  }
+
+})();

@@ -1,0 +1,78 @@
+html,body{
+	height: 100%;
+	/*font-family: ;*/
+}
+.navbar{
+	top: 0;
+	padding: 0;
+	height: 70px;
+	border-bottom: 1px solid black;
+}
+.navbar .navbar-default{
+	margin-bottom: 5px;
+	padding: 0;
+}
+.sidebar_menu{
+	position: fixed;
+	width: 228px;
+	margin-left: 0;
+	overflow: hidden;
+	height: 100vh;
+	max-height: 100vh;
+	background-color: rgba(17, 17, 17, 0.9);
+	opacity: 0.9;
+	transition: all 0.3s ease-in-out;
+}
+.fa-times{
+	right: 10px;
+	top: 10px;
+	opacity: 0.7;
+	cursor: pointer;
+	position: absolute;
+	color: white;
+	transition: all 0.3s ease-in-out;
+}
+.fa-times:hover{
+	opacity: 1;
+}
+.hide_menu{
+	margin-left: -228px;
+}
+.opacity_one{
+	opacity: 1;
+	transition: all 0.3s ease-in-out;
+}
+/*
+.navBardemoBasicUsage md-content .ext-content {
+  padding: 50px;
+  margin: 20px;
+  background-color: #FFF2E0; }
+
+*/
+
+#rtPannel .tab-content {
+  padding : 5px 15px;
+}
+/* remove border radius for the tab */
+
+#rtPannel .nav-tabs > li > a {
+  border-radius: 0;
+}
+
+/*tree*/
+.tag-container
+    {
+        display: inline-block;
+        clear: both;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .item-trash
+    {
+        font-size: 48px;
+        float: right;
+    }
+    .item-trash-dropover
+    {
+        color: red;
+    }

@@ -1,0 +1,131 @@
+
+    <div id="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 text-center bottom-separator">
+                    <img src="/lib/images/home/under.png" class="img-responsive inline" alt="">
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="testimonial bottom">
+                        <h2>Testimonials</h2>
+                        <div class="media">
+                            <div class="pull-left">
+                                <!--<a href="#"><img src="/lib/images/home/profile1.png" alt=""></a>-->
+                            </div>
+                            <div class="media-body">
+                                <blockquote>TheoreX is going to be a unique platform for e-learning. I think they are the first one with so much variation in this particular field.</blockquote>
+                                <h3><a href="#">- Arindam Ganguly</a></h3>
+                            </div>
+                         </div>
+                        <div class="media">
+                            <div class="pull-left">
+                                <!--<a href="#"><img src="/lib/images/home/profile2.png" alt=""></a>-->
+                            </div>
+                            <div class="media-body">
+                                <blockquote>Rebuilding the Virtual Education domain with an all-new mindset and work process, TheoreX can be the very thing for the future!! With the web turning out to be the game-changer in all aspects, TheoreX has a long way to go!!</blockquote>
+                                <h3><a href="">- Priyansu Ganguly</a></h3>
+                            </div>
+                        </div>   
+                    </div> 
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <div class="contact-info bottom">
+                        <h2>Contacts</h2>
+                        <address>
+                        E-mail: <a href="mailto:info@theorexedutech.com">info@theorexedutech.com</a> <br> 
+                        Phone 1: +91-9875624549 <br> 
+                        Phone 2: +91-9836631103 <br>
+                        Phone 3: +91-9874975638 <br> 
+                        </address>
+
+                        <h2>Address</h2>
+                        <address>
+                        TheoreX Edutech LLP <br>
+                        71, Sonali Park, Garia, <br> 
+                        Gitanjali Apartment, <br> 
+                        Kolkata - 700084 <br> 
+                        West Bengal, India <br> 
+                        </address>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-12">
+                    <div class="contact-form bottom">
+                        <h2>Send Us A Message</h2>
+                        <form id="main-contact-form" name="contact-form"  ng-submit="footervm.contact_msg()">
+                            <div class="form-group">
+                                <input type="text" name="name" class="form-control" required="required" placeholder="Name" ng-model="footervm.contactdata.name">
+                            </div>
+                            <div class="form-group">
+                                <input type="email" name="email" class="form-control" required="required" placeholder="Email Id" ng-model="footervm.contactdata.email">
+                            </div>
+                            <div class="form-group">
+                                <textarea name="message" id="message" required="required" class="form-control" rows="8" placeholder="Your text here" ng-model="footervm.contactdata.message"></textarea>
+                            </div>                        
+                            <div class="form-group">
+                                <button type="submit" name="submit" class="btn btn-submit" value="Submit" >Submit</button>
+                            </div>
+				<div class="alert alert-success fade in" style="display:none;" id="contact_success_div">
+				  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+				  Message Successfully Sent
+				</div>
+                        </form>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="copyright-text text-center">
+                        <p>&copy; TheoreX Edutech LLP, 2017. All Rights Reserved.</p>   
+                    </div>
+                </div>
+<div class="scroll-top-wrapper " onClick="$('html, body').animate({
+    scrollTop: '0px'
+}, 800);">
+	<span class="scroll-top-inner">
+		<i class="fa fa-2x fa-arrow-circle-up"></i>
+	</span>
+</div>
+            </div>
+        </div>
+    </div>
+
+<style>
+.scroll-top-wrapper {
+    position: fixed;
+	opacity: 0;
+	visibility: hidden;
+	overflow: hidden;
+	text-align: center;
+	z-index: 9999;
+    background-color: #777777;
+	color: #eeeeee;
+	width: 50px;
+	height: 48px;
+	line-height: 48px;
+	right: 30px;
+	bottom: 30px;
+	padding-top: 2px;
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+	border-bottom-left-radius: 10px;
+	-webkit-transition: all 0.5s ease-in-out;
+	-moz-transition: all 0.5s ease-in-out;
+	-ms-transition: all 0.5s ease-in-out;
+	-o-transition: all 0.5s ease-in-out;
+	transition: all 0.5s ease-in-out;
+}
+.scroll-top-wrapper:hover {
+	background-color: #888888;
+}
+.scroll-top-wrapper.show {
+    visibility:visible;
+    cursor:pointer;
+	opacity: 1.0;
+}
+.scroll-top-wrapper i.fa {
+	line-height: inherit;
+}
+ 
+</style>
+
+    <!--/#footer-->

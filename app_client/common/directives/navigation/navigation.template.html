@@ -1,0 +1,28 @@
+<header id="header">
+    <nav class="navbar navbar-default" style="height: 100px;">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand"><img href="/login_external" src="/lib/images/dashboard/logo.PNG" height="70" width="300"></a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+              <a href="" class="btn btn-primary btn-lg active btncontent" role="button" aria-pressed="true" ng-click="enterClass();" ng-show="hasClassEntered">Enter Class</a>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li><a><h4>@JoY put your actual navigation here</h4></a></li>
+              <li><a class="navbar-brand"><img class="prsnprofile" src="{{ vm.jsondata.profilepic }}" ng-click="logout();"></a></li>
+            </ul>
+        </div>
+      </div>
+    </nav> 
+</header>
+<div class="menu" align="right" style="position: fixed;">
+      <ul class="nav-stacked">
+        <li><a data-toggle="tooltip" data-placement="right" title="Routine" href="/teachers/routine"><span class="fa fa-calendar"></span></a></li>
+        <li><a data-toggle="tooltip" data-placement="right" title="Classes" href="/teachers/classes"><span class="fa fa-database"></span></a></li>
+        <li><a data-toggle="tooltip" data-placement="right" title="Content" href="/teachers/content"><span class="fa fa-leanpub"></span></a></li>
+        <li><a data-toggle="tooltip" data-placement="right" title="Teachers" href="/teachers/teachers"><span class="fa fa-university"></span></a></li>
+        <li><a data-toggle="tooltip" data-placement="right" title="Assesment Creation" href="/teachers/assesment/{{ vm.jsondata._id }}"><span class="fa fa-pencil"></span></a></li>
+        <li><a data-toggle="tooltip" data-placement="right" title="Evaluate Assesment" href="/teachers/assignmentdashboard"><span class="fa fa-pencil-square-o"></span></a></li>
+      </ul>
+</div>

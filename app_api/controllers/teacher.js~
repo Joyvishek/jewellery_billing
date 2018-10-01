@@ -1,0 +1,1288 @@
+var mongoose = require('mongoose');
+var User = mongoose.model('User');
+var Attendance = mongoose.model('Attendance');
+var ClassRoutine = mongoose.model('ClassRoutine');
+var Classroom_session = mongoose.model('Classroom_session');
+var Coursecontent = mongoose.model('Coursecontent');
+var Subject = mongoose.model('Subject');
+var Class = mongoose.model('Class');
+var Topic = mongoose.model('Topic');
+var Module = mongoose.model('Module');
+var Submodule = mongoose.model('Submodule');
+var Assignment = mongoose.model('Assignment');
+var AssignmentScore = mongoose.model('AssignmentScore');
+var Assessmentgroup = mongoose.model('Assessmentgroup');
+var Syllabusmodule = mongoose.model('Syllabusmodule');
+var Assessmentclass = mongoose.model('Assessmentclass');
+var Assessmentsubmission = mongoose.model('Assessmentsubmission');
+
+module.exports.takeAttendance = function(req, res) {
+	//res.status(200).json({redirect_to: req.payload._id});
+	  if (!req.payload._id) {
+	    res.status(401).json({
+	      "message" : "UnauthorizedError: private profile"
+	    });
+	  } else {	
+			User.findOne({_id:req.payload._id},function(err, teacherUser){
+				if(teacherUser && (teacherUser.usertype == "SCHOOLADMIN" || teacherUser.usertype == "TEACHER")){
+					    var attendance = {'isPresent': req.body.params.isPresent, 'attendanceDate':  Date.now(), 'teacherId': req.payload._id, 'sectionId': req.body.params.sectionId, 'remarks': req.body.params.remarks, 'studentId': req.body.params.studentId};
+// Do attendance
+//console.log(attendance);
+					    var start_date = new Date();
+					    start_date.setHours(0,0,0,0);
+
+					    var end_date = new Date();
+					    end_date.setHours(23,59,59,999);
+
+					    Attendance.findOneAndUpdate({'studentId' : req.body.params.studentId, 'teacherId': req.payload._id, 'attendanceDate': {$gte: start_date, $lt: end_date}}, attendance, {upsert:true, new: true}, function(err, attendanceDoc) {
+					    	console.log(attendanceDoc);
+
+						    	res.status(200).json({"message":"Attendance Received"});
+		        		    });
+
+				}else{
+				    res.status(401).json({
+				      "message" : "UnauthorizedError: private profile"
+				    });
+				}
+			});
+
+	  }
+
+};
+
+// Returns class routine for the teacher in this current year
+module.exports.getRoutine = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId){
+   		var d = new Date(),year = d.getFullYear();
+		var daysOfWeek=["monday","tuesday","wednesday","thursday","friday","saturday"];
+		var jsonRoutine={};
+
+		for (var i in daysOfWeek) {
+			getTeacherRoutineAsc(daysOfWeek[i], function (routine){
+				//console.log(routine);
+				if(Object.keys(routine).length == daysOfWeek.length){
+					return res.status(200).json(routine);
+				}
+			});
+		}
+
+		function getTeacherRoutineAsc(day, routineCallback){
+			ClassRoutine.find({ 'teacherId': req.query.teacherId, 'isCurrentSession' : true, "scheduleDaysRuns":{ "$in" : [day]} }).populate("teacherId").populate("sectionId").exec(function(err, doc){
+			    if (err) return res.send(500, { error: err });
+			    if(doc){ // if found return routine for the section
+			    	doc = JSON.parse(JSON.stringify(doc));
+			    	 jsonRoutine[day]=doc;
+				 routineCallback(jsonRoutine);
+			    }else{
+			    	routineCallback(err);
+			    }
+			});
+		}
+	}else{
+		return res.status(400).json({"message":"Please specify section id"});
+	}
+  }
+
+};
+
+// Teacher starts class
+module.exports.startClass = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.teacherId && req.body.params.sectionId){
+   		var d = new Date();
+		var new_classroom_session = new Classroom_session({'teacherId' : req.body.params.teacherId, 'sectionId' : req.body.params.sectionId, 'startTime' : d});
+	        
+		// save the classroom_session model
+		new_classroom_session.save(function(err){
+		  if (err) {
+				return res.send(500, { error: err });
+		  }
+		  else {
+		  	res.status(200).json({"message":"Class Started", "classroomSessionId" : new_classroom_session._id});
+		  }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Teacher ends class
+module.exports.endClass = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.classId){
+   		var d = new Date();
+	        
+		// save the classroom_session model
+		Classroom_session.findOneAndUpdate({ _id: req.body.params.classId, 'teacherId' : req.payload._id}, {'endTime' : d},function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ // if found return routine for the teacher
+		    	return res.status(200).json({"message":"Class Ended", "classDetails" : doc});	    
+		    }else{
+		    	return res.status(200).json({"message":"Invalid section"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Returns total time for class for the teacher
+module.exports.getTotalClassTime = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId){
+   		var d = new Date(),year = d.getFullYear();
+		Classroom_session.aggregate({$match:{"endTime":{$exists : true}, "teacherId": new mongoose.Types.ObjectId(req.query.teacherId)} },{$group : { _id:null,alottedTime: {$sum :  {$subtract:["$endTime","$startTime"] }}} }, function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ // if found return routine for the section
+			 return res.status(200).json(doc);
+		    }else{
+		    	return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Returns subjects on which a teacher has developed content
+module.exports.getTeacherSubjects = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId){
+
+		Coursecontent.find({ 'teacherId': req.query.teacherId }).distinct('subjectId').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 Subject.find({_id : {$in: doc}}, function(err, subjects){
+			    return res.status(200).json(subjects);
+			 });
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Returns classes on which a teacher has developed content for a particular class
+module.exports.getTeacherContentClasses = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId && req.query.subjectId){
+		Coursecontent.find({ 'teacherId': req.query.teacherId, 'subjectId': req.query.subjectId }).distinct('classId').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 Class.find({_id : {$in: doc}}, function(err, classes){
+			    return res.status(200).json(classes);
+			 });
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+
+// Returns teachers' content
+module.exports.getTeacherContent = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId && req.query.subjectId && req.query.classId){
+		Coursecontent.find({ 'teacherId': req.query.teacherId, 'subjectId': req.query.subjectId, 'classId': req.query.classId }).populate('subjectId').populate('classId').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			    return res.status(200).json(doc);
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Returns teachers' content
+module.exports.getTeacherFullContent = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.contentId){
+		Coursecontent.aggregate([
+			{$match : 
+				{
+					"_id" : mongoose.Types.ObjectId(req.query.contentId)
+				} 
+
+			},
+			{"$lookup": {
+				"from" : "syllabusmodules",
+				"localField" : "modules.syllabusModule",
+				"foreignField" : "_id",
+				"as" : "syllabusObjects"
+			}},
+			{ "$unwind": "$syllabusObjects" },
+			{"$lookup": {
+				"from" : "topics",
+				"localField" : "modules.topics.topicId",
+				"foreignField" : "_id",
+				"as" : "topicObjects"
+			}},
+			{ "$unwind": "$topicObjects" },
+
+			/*{ "$group": {	
+				"_id": "$_id",
+				"syllabusModule": {
+					$push : {
+						"module" : "$syllabusObjects._id",
+						"syllabusObject" : "$syllabusObjects",
+						"topics" : "$modules.topics",
+					}
+				} 
+			    } 
+			}
+			{"$lookup": {
+				"from" : "topics",
+				"localField" : "modules.topics.topicId",
+				"foreignField" : "_id",
+				"as" : "topicObjects"
+			}},
+			{ $group: 
+				{	_id: {
+						"studentId" : "$studentId", 
+						"studentName" : "$studentObjects.name", 
+					},
+					avgScore: {$avg: "$score" } 
+				} 
+			}*/
+		]).exec(function(err, doc){
+			    if (err) return res.send(500, { error: err });
+			    if(doc){ 
+jsonArr = {};
+/** Loop through modules **/
+	doc.forEach(function(content){
+	    if(!jsonArr[content._id]){
+		jsonArr[content._id] = {
+					   "teacherId" : content.teacherId,
+					   "classId" : content.classId,
+					   "subjectId" : content.subjectId,
+					};
+	    }
+            content.modules.forEach(function(modules){
+	      if(!jsonArr[content._id][modules.syllabusModule]){
+		jsonArr[content._id][modules.syllabusModule] = {};
+	      }
+		if(JSON.stringify(modules.syllabusModule) == JSON.stringify(content.syllabusObjects._id)){
+			jsonArr[content._id][modules.syllabusModule]["name"] = content.syllabusObjects.name;
+			jsonArr[content._id][modules.syllabusModule]["_id"] = content.syllabusObjects._id;
+		}
+
+              var topics = modules.topics;
+              topics.forEach(function(topic){
+		      if(!jsonArr[content._id][modules.syllabusModule][topic.topicId]){
+			jsonArr[content._id][modules.syllabusModule][topic.topicId] = {};
+		      }
+			if(JSON.stringify(topic.topicId) == JSON.stringify(content.topicObjects._id)){
+				jsonArr[content._id][modules.syllabusModule][topic.topicId]["name"] = content.topicObjects.name;
+				jsonArr[content._id][modules.syllabusModule][topic.topicId]["_id"] = content.topicObjects._id;
+			}
+              }); // end of topics loop
+            }); // rows loop ends
+	});
+				//console.log(jsonArr);
+				    return res.status(200).json(jsonArr);
+
+			    }else{
+				return res.status(400).json({"message":"Invalid Request"});
+			    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Returns teachers' topic name
+module.exports.getTeacherTopicName = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.topicId){
+
+		Topic.find({ _id: req.query.topicId }, 'name desc module').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			Syllabusmodule.find({ _id : doc[0].module }).exec(function(err, syllabusmodule){
+			    if (err) return res.send(500, { error: err });
+			    if(syllabusmodule){ 
+
+				    doc = JSON.parse(JSON.stringify(doc));
+				    doc[0].syllabusmodule = syllabusmodule[0].name;
+				    doc[0].subjectId = syllabusmodule[0].subjectId;
+				    return res.status(200).json(doc);
+			    }else{
+				return res.status(400).json({"message":"Invalid Request"});
+			    }
+			});
+
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Class session add subject
+module.exports.classSessionAddSubject = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.classId && req.body.params.subjectId){
+   		var d = new Date();
+		Classroom_session.findOneAndUpdate({ _id: req.body.params.classId}, {'subjectId' : req.body.params.subjectId},function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ // if found return routine for the teacher
+		    	return res.status(200).json({"message":"SubjectAdded", "classDetails" : doc});	    
+		    }else{
+		    	return res.status(200).json({"message":"Invalid section"});
+		    }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Returns topic-wise assessment percentage score for ALL STUDENTS
+module.exports.getTopicWiseAssessmentScore = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId && req.query.startDate && req.query.endDate && req.query.subjectId && req.query.classId){
+   		var d = new Date(),year = d.getFullYear();
+		var jsonAssessmentScore = {};
+		var jsonTopicCounter = 0;
+
+		Coursecontent.find({ 'teacherId': req.query.teacherId, 'subjectId' : req.query.subjectId, "classId": req.query.classId}, {_id:1, modules:1}).populate({path:"modules", select : '_id name submodules',
+	populate: {path:"submodules", select : '_id name topics',
+	populate: {path:"topics", select : '_id name',match: {isActive:true}}}})
+.exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ // if found return 
+
+
+			doc.forEach(function(record){
+			    record.modules.forEach(function(modules){
+			        modules.submodules.forEach(function(submodules){
+
+				    if(submodules.topics.length>0){
+	 			            submodules.topics.forEach(function(topics){
+
+						jsonTopicCounter += 1;
+
+					    });
+				    }
+				});
+
+			    });
+			    // Do whatever processing you want
+			});
+
+
+			doc.forEach(function(record){
+			    var modules_arr = record.modules;
+			    modules_arr.forEach(function(modules){
+				jsonAssessmentScore[modules._id]={};
+				jsonAssessmentScore[modules._id]["moduleName"]=modules.name;
+				var submodules_arr = modules.submodules;
+			        submodules_arr.forEach(function(submodules){
+
+				    var topics_arr = submodules.topics;
+				    if(topics_arr.length>0){
+	 			            topics_arr.forEach(function(topics){
+						jsonAssessmentScore[modules._id][topics._id]={};
+						jsonAssessmentScore[modules._id][topics._id]["topicName"]=topics.name;
+						jsonAssessmentScore[modules._id][topics._id]["topicId"]=topics._id;
+						jsonAssessmentScore[modules._id][topics._id]["moduleId"]=modules._id;
+
+						getAssessmentScoreAsc(jsonAssessmentScore, modules._id, topics._id, function (assessmentScore){
+							//console.log(assessmentScore, "   dwr   ");
+							if(jsonTopicCounter == 0){
+								//console.log(assessmentScore, "   dwr   ");
+								return res.status(200).json(assessmentScore);
+							}
+						});
+
+					    });
+				    }
+				});
+
+			    });
+			    // Do whatever processing you want
+			});
+
+			function getAssessmentScoreAsc(topics,moduleId, topicId, assessmentscoreCallback){
+				console.log("serewrewee ",jsonTopicCounter);				
+				Assignment.find({ "topics":{ "$in" : [topicId]} }).lean()
+  .distinct('_id').exec( function(err, doc){
+				    if (err) return res.send(500, { error: err });
+				    if(doc){ 
+					 AssignmentScore.aggregate({$match:{ 
+"assignmentId" : {$in : doc} } } , 
+	{$group: {_id:null, avgScore: {$avg: "$score" } } } ).exec(function(err, assScore){
+				    	    topics[moduleId][topicId]["scores"]=assScore[0].avgScore;
+					    jsonTopicCounter--
+					    assessmentscoreCallback(topics);
+					 });
+
+				    }else{
+					jsonTopicCounter--
+				    	assessmentscoreCallback(err);
+				    }
+				});
+			}
+
+			//console.log(jsonAssessmentScore);
+
+			//return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+		/*for (var i in daysOfWeek) {
+			getTeacherRoutineAsc(daysOfWeek[i], function (routine){
+				//console.log(routine);
+				if(Object.keys(routine).length == daysOfWeek.length){
+					return res.status(200).json(routine);
+				}
+			});
+		}
+
+		function getTeacherRoutineAsc(day, routineCallback){
+			ClassRoutine.find({ 'teacherId': req.query.teacherId, 'isCurrentSession' : true, "scheduleDaysRuns":{ "$in" : [day]} }, function(err, doc){
+			    if (err) return res.send(500, { error: err });
+			    if(doc){ // if found return routine for the section
+			    	 jsonRoutine[day]=doc;
+				 routineCallback(jsonRoutine);
+			    }else{
+			    	routineCallback(err);
+			    }
+			});
+		}*/
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Teacher Create New Assignment Group
+module.exports.CreateNewAssessmentGroup = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.teacherId){
+   		var d = new Date();
+		var new_assessment_group = new Assessmentgroup({'teacherId' : req.body.params.teacherId, 'isActive': true});
+	        
+		// save the new_assessment_group model
+		new_assessment_group.save(function(err){
+		  if (err) {
+				return res.send(500, { error: err });
+		  }
+		  else {
+		  	res.status(200).json({"message":"Assessmentgroup Created", "assessmentGroupId" : new_assessment_group._id});
+		  }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Teacher Create New Assignment
+module.exports.CreateNewAssignment = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assessmentGroupId && req.body.params.assignment){
+   		var d = new Date();
+		req.body.params.assignment.isActive=true;
+		var new_assignment = new Assignment(req.body.params.assignment);
+		//new_assingnment.isActive = true;
+	        
+		// save the new_assessment_group model
+		new_assignment.save(function(err){
+		  if (err) {
+				return res.send(500, { error: err });
+		  }
+		  else {
+			Assessmentgroup.findByIdAndUpdate(
+			    req.body.params.assessmentGroupId,
+			    {$push: {"assignments": new_assignment._id}},
+			    {safe: true, upsert: true},
+			    function(err, model) {
+				res.status(200).json({"message":"Assignment Created", "assignmentId" : new_assignment._id});
+			    }
+			);
+		  }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Teacher Edit Assignment
+module.exports.EditAssignment = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assignment){
+   		var d = new Date();
+
+		Assignment.findByIdAndUpdate(
+		    req.body.params.assignment._id,
+		    req.body.params.assignment,
+		    {safe: true, upsert: true},
+		    function(err, model) {
+		    	console.log(req.body.params.assignment);
+			res.status(200).json({"message":"Assignment Saved", "assignment" : model});
+		    }
+		);
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Get Teacher Names against multiple userIds
+module.exports.getUserNames = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.userIds){
+   		var d = new Date(),year = d.getFullYear();
+		var userIdArr =  req.query.userIds.split(",");
+		User.find({_id: {$in: userIdArr} },'_id name', function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ // if found return routine for the section
+			 return res.status(200).json(doc);
+		    }else{
+		    	return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Teacher assign assessmentDoc / assessmentGroup to Class
+module.exports.assignToClass = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assessmentclass){
+   		var d = new Date();
+		// save new document
+		req.body.params.assessmentclass.isActive = true;
+		req.body.params.assessmentclass.assignmentDate = d;
+		if(req.body.params.assessmentclass.dueDate){
+			var dateString = req.body.params.assessmentclass.dueDate;
+			req.body.params.assessmentclass.dueDate =  new Date(dateString.replace(/-/g, "/"));
+		}
+		var new_assessmentclass = new Assessmentclass(req.body.params.assessmentclass);
+		new_assessmentclass.save(function(err){
+		  if (err) {
+				return res.send(500, { error: err });
+		  }
+		  else {
+		  	res.status(200).json({"message":"Assigned To Class", "assessmentClassId" : new_assessmentclass._id});
+		  }
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Teacher edit assign assessmentDoc / assessmentGroup to Class
+module.exports.editAssignToClass = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assessmentclass){
+   		var d = new Date();
+		// save new document
+		if(req.body.params.assessmentclass.dueDate){
+			var dateString = req.body.params.assessmentclass.dueDate;
+			req.body.params.assessmentclass.dueDate =  new Date(dateString.replace(/-/g, "/"));
+		}
+console.log(req.body.params.assessmentclass);
+		Assessmentclass.findByIdAndUpdate(
+		    req.body.params.assessmentclass._id,
+		    req.body.params.assessmentclass,
+		    {safe: true, upsert: true},
+		    function(err, model) {
+			res.status(200).json({"message":"AssessmentClass Saved", "assessmentClass" : model});
+		    }
+		);
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Get AssessmentGroups against TeacherId and SubjectId
+module.exports.getTeacherAssessmentGroups = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId){
+		var searchParams={"teacherId":req.query.teacherId, "isActive": true};
+		if(req.query.classId){
+			searchParams.classId = req.query.classId;
+		}
+		if(req.query.subjectId){
+			searchParams.subjectId = req.query.subjectId;
+		}
+		Assessmentgroup.find(
+			 searchParams
+		 ).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Get assessments given by a teacherId to a sectionId
+module.exports.getGivenAssessmentClass = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId){
+		var filterParams = {};
+		filterParams.isActive = true;
+		if(req.query.sectionId){
+			filterParams.sectionId = mongoose.Types.ObjectId(req.query.sectionId);
+		}
+			Assessmentclass.aggregate([
+			   {"$match": filterParams},
+			   {"$sort": { dueDate : -1 }},
+			   {"$lookup": {
+				"from" : "assessmentgroups",
+				"localField" : "assessmentgroups",
+				"foreignField" : "_id",
+				"as" : "assessmentgroupObjects"
+			   }},
+			   { "$unwind": "$assessmentgroupObjects" },
+			   { "$match": { 
+					"assessmentgroupObjects.teacherId": mongoose.Types.ObjectId(req.query.teacherId) ,
+					"isActive": true
+					}
+			   },
+			   { "$unwind": "$assessmentgroupObjects" },
+			])
+			.exec(function(err, doc){
+			    if (err) return res.send(500, { error: err });
+			    if(doc){ 
+				 
+				 return res.status(200).json(doc);
+			    }else{
+				return res.status(400).json({"message":"Invalid Request"});
+			    }
+			}); 
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+module.exports.getAssesmentDetailsSubmission = function(req, res) {
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.submissionId){
+		Assessmentsubmission.find({'_id' : req.query.submissionId})
+		.lean().distinct("assessmentclass")
+			.exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){
+		    	Assessmentclass.find({'_id' : {$in: doc}})
+		    	.populate({path:"assessmentgroups", select : '_id heading teacherId assignments',
+				populate: {path:"assignments", select : '_id name correctOptionIndex options hints topics desc'}})
+			 	.exec( function(err, assessmentgroups){
+			    return res.status(200).json(assessmentgroups);
+			 });
+		    }else{
+		    	return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request 2"});
+	}
+  }
+
+};
+
+// Get all completed submissions of a assessmentclass
+module.exports.getAssessmentClassSubmissions = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.assessmentclass){
+		var searchParams={"assessmentclass":req.query.assessmentclass, "isActive": true};
+		if(req.query.sectionId){
+			searchParams.studentId = req.query.studentId;
+		}
+		Assessmentsubmission.find(
+			 searchParams
+		 ).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Teacher evaluate submission
+module.exports.evaluateSubmissionSubjective = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assignmentId && req.body.params.studentId && req.body.params.submissionDate && req.body.params.score){
+   		var d = new Date();
+		req.body.params.isActive = true;
+		AssignmentScore.findOneAndUpdate(
+		    { 
+			"assignmentId": req.body.params.assignmentId,
+			"studentId": req.body.params.studentId,
+			"submissionDate": req.body.params.submissionDate,
+		    },
+		    req.body.params,
+		    {safe: true, upsert: true},
+		    function(err, model) {
+			res.status(200).json({"message":"Scores saved", "assignment" : model});
+		    }
+		);
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Teacher evaluate submission MCQ
+module.exports.evaluateSubmissionMCQ= function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assessmentSubmissionId){
+   		var d = new Date();
+		req.body.params.isActive = true;
+		Assessmentsubmission.find(
+		    { 
+			"_id": req.body.params.assessmentSubmissionId,
+			"isActive" : true
+		    },
+		    function(err, model) {
+			if(model){
+				var studentId = model[0].studentId;
+				var submissionDate = model[0].submissionDate;
+				var noOfAssignments = model[0].answers.length;
+				model[0].answers.forEach(function(answers){
+					Assignment.find({ "_id": mongoose.Types.ObjectId(answers.assignmentId) } , function(err, assignment){
+
+						if(assignment && answers.optionIndex == assignment[0].correctOptionIndex){
+							var score = 100;
+						}else if(assignment){
+							var score = 0;
+						}
+						AssignmentScore.findOneAndUpdate(
+						    { 
+							"assignmentId": answers.assignmentId,
+							"studentId": studentId,
+							"submissionDate": submissionDate,
+						    },
+						    {"score": score, "isActive" : true},
+						    {safe: true, upsert: true},
+						    function(err, model) {
+							noOfAssignments--;
+							if(noOfAssignments <= 0){
+								res.status(200).json({"message":"Scores saved"});
+							}
+						    }
+						);
+					});
+
+				});
+			}
+		    }
+		);
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Get Assessmentgroup against teacherId and classId and topicId 
+module.exports.getTeacherAssessmentGroupsAgainstTopic = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId && req.query.classId && req.query.topicId){
+		var searchParams={"teacherId":mongoose.Types.ObjectId(req.query.teacherId), "isActive": true};
+		if(req.query.classId){
+			searchParams.classId = mongoose.Types.ObjectId(req.query.classId);
+		}
+		if(req.query.subjectId){
+			searchParams.subjectId = mongoose.Types.ObjectId(req.query.subjectId);
+		}
+		Assignment.aggregate([
+		   {"$match": {"topics": mongoose.Types.ObjectId(req.query.topicId), "isActive": true}},
+		   {"$lookup": {
+			"from" : "assessmentgroups",
+			"localField" : "_id",
+			"foreignField" : "assignments",
+			"as" : "assessmentgroupObjects"
+		   }},
+		   { "$unwind": "$assessmentgroupObjects" },
+		   { "$match": { 
+				"assessmentgroupObjects.teacherId": mongoose.Types.ObjectId(req.query.teacherId) ,
+				"isActive": true
+				}
+		   },
+		   { "$unwind": "$assessmentgroupObjects" },
+		   { "$group" : {
+		      "_id": "assessmentGroup",
+		      "assessmentGroup": { $addToSet : "$assessmentgroupObjects" }
+		   }},
+		])
+		.exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 
+			 return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		}); 
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Returns subjects on which a teacher takes class according to routine
+module.exports.getTeacherRoutineSubjects = function(req, res) {
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId){
+
+		ClassRoutine.find({ 'teacherId': req.query.teacherId })
+		.distinct('subjectId').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){
+			 Subject.find({'_id' : {$in: doc}})
+			 .exec( function(err, subjects){
+			    return res.status(200).json(subjects);
+			 });
+			 
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};	
+  
+// Teacher Delete an Assignment from an AssessmentGroup
+module.exports.DeleteAssignmentFromGroup = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assessmentGroupId && req.body.params.assignmentIds){
+   		var d = new Date();
+	        
+		// pull from assessmentgroup
+		Assessmentgroup.findOneAndUpdate(
+			{'_id' : req.body.params.assessmentGroupId},
+			{$pullAll :  {'assignments' : req.body.params.assignmentIds}},
+			{new : true},
+		function(err, assessmentgroupDoc) {
+
+		    	res.status(200).json({"message":"Successfully Deleted"});
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Returns classes for which a teacher takes class according to routine on a subect
+module.exports.getTeacherRoutineClass = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.teacherId && req.query.subjectId){
+
+		ClassRoutine.find({ 'teacherId': req.query.teacherId,'subjectId' : req.query.subjectId })
+		.distinct('sectionId').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			 Class.find({'sections' : {$in: doc}})
+			 .exec( function(err, classes){
+			    return res.status(200).json(classes);
+			 });
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Teacher Edit Assessment Group
+module.exports.EditAssessmentGroup = function(req, res) {
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+  		if(req.body.params.assessmentgroup){
+   		var d = new Date();
+
+		Assessmentgroup.findByIdAndUpdate(
+		    req.body.params.assessmentgroup._id,
+		    req.body.params.assessmentgroup,
+		    {safe: true, upsert: true},
+		    function(err, model) {
+		    	console.log(req.body.params.assessmentgroup);
+			res.status(200).json({"message":"Assignment Saved", "assessmentgroup" : model});
+		    }
+		);
+	}else{
+		return res.status(400).json({"message":"Invalid request"});
+	}
+  }
+
+};
+
+// Teacher Delete an Assignment from an AssessmentGroup
+module.exports.DeleteAssignmentFromGroup = function(req, res) {
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.body.params.assessmentGroupId && req.body.params.assignmentIds){
+   		var d = new Date();
+	        
+		// pull from assessmentgroup
+		Assessmentgroup.findOneAndUpdate(
+			{'_id' : req.body.params.assessmentGroupId},
+			{$pullAll :  {'assignments' : req.body.params.assignmentIds}},
+			{new : true},
+		function(err, assessmentgroupDoc) {
+
+		    	res.status(200).json({"message":"Successfully Deleted"});
+		});
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Get all completed submissions 
+// for a assessmentclass whose evaluation is pending
+module.exports.getSubmissionsNotEvaluated = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.assessmentclass){
+		var searchParams={"assessmentclass":req.query.assessmentclass, "isActive": true, "isEvaluated" : { "$exists" : false }}; // Could be a slow process -> Needs to be revisited later on
+
+		Assessmentsubmission.find(
+			   searchParams
+			).populate('studentId', '_id name').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Get all completed submissions 
+// for a assessmentclass whose evaluation is done
+module.exports.getSubmissionsAlreadyEvaluated = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.assessmentclass){
+		var searchParams={"assessmentclass":req.query.assessmentclass, "isActive": true, "isEvaluated" : true}; // Could be a slow process -> Needs to be revisited later on
+
+		Assessmentsubmission.find(
+			   searchParams
+			).populate('studentId', '_id name').exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
+
+// Get score against an assessmentSubmissionId
+module.exports.getAssessmentScoreAgainstSubmissionId = function(req, res) {
+
+  if (!req.payload._id) {
+    res.status(401).json({
+      "message" : "UnauthorizedError: private profile"
+    });
+  } else {
+	if(req.query.assessmentsubmissionId){
+		Assessmentsubmission.aggregate([
+			{$match : 
+				{
+					"_id" : mongoose.Types.ObjectId(req.query.assessmentsubmissionId),
+					"isActive" : true,
+					"isEvaluated" : true
+				} 
+
+			},
+			{"$lookup": {
+				"from" : "assignmentscores",
+				"localField" : "answers.assignmentId",
+				"foreignField" : "assignmentId",
+				"as" : "scoreObjects"
+			}},
+			{ "$unwind": "$scoreObjects" },
+		        { $project: {
+		                "scoreObjects.score": 1,
+		                studentId: 1,
+		                "scoreObjects.studentId": 1,
+		                isEql : { $eq:["$studentId","$scoreObjects.studentId"] }
+		        }},
+		        { $match : {
+		                isEql : true,
+		        }},
+			{ "$group" : {
+			"_id" : "null",
+			avgScore: {$avg: "$scoreObjects.score" },
+			}}
+
+		]).exec(function(err, doc){
+		    if (err) return res.send(500, { error: err });
+		    if(doc){ 
+			return res.status(200).json(doc);
+		    }else{
+			return res.status(400).json({"message":"Invalid Request"});
+		    }
+		});
+
+
+	   
+	}else{
+		return res.status(400).json({"message":"Invalid Request"});
+	}
+  }
+
+};
